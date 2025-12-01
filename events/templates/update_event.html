@@ -1,0 +1,100 @@
+{% extends "navbar.html" %}
+
+{% block create_event %}
+{% load static %}
+
+<style>
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none !important;
+  }
+  
+  *:focus-visible {
+    outline: none !important;
+  }
+  
+  </style>
+
+{% comment %} messages {% endcomment %}
+<div>
+  {% if messages %}
+    {% for message in messages %}
+      <p class="px-2 py-1 text-center mx-6 my-4 bg-green-500">
+        {{ message }}
+      </p>
+    {% endfor %}
+
+  {% endif %}
+</div>
+
+{% comment %} form  {% endcomment %}
+<div class="">
+  <form method="POST" enctype= "multipart/form-data" class="flex flex-col justify-center my-20 w-8/12 mx-auto shadow-2xl p-10 rounded-sm">
+
+    {% csrf_token %}
+  
+    {{ form }}
+    {{category_form}}
+  
+    <h3 class="mx-auto w-fit px-4 py-2 rounded text-xl">
+      Participants
+    </h3>
+    
+      <div id="participant-wrapper" class="mx-auto">
+
+        {% for participant in participants %}
+          <div class="participant-row">
+            <input type="text" class="shadow-lg px-3 py-2 my-2 rounded-md focus:bg-orange-400" 
+                  name="participant_name[]" 
+                  value="{{ participant.name }}" 
+                  placeholder="Participant Name" required>
+            <input type="email" class="shadow-lg px-3 py-2 my-2 rounded-md focus:bg-orange-400" 
+                  name="participant_email[]" 
+                  value="{{ participant.email }}" 
+                  placeholder="Participant Email" required>
+            <button type="button" onclick="this.parentElement.remove()">−</button>
+          </div>
+        {% endfor %}
+      
+        {% if participants|length == 0 %}
+          <div class="participant-row">
+            <input type="text" class="shadow-lg px-3 py-2 my-2 rounded-md focus:bg-orange-400" 
+                  name="participant_name[]" 
+                  placeholder="Participant Name" required>
+            <input type="email" class="shadow-lg px-3 py-2 my-2 rounded-md focus:bg-orange-400" 
+                  name="participant_email[]" 
+                  placeholder="Participant Email" required>
+          </div>
+        {% endif %}
+      
+      </div>
+    
+      
+      <button type="button" class="px-3 py-2 bg-orange-400 m-3 rounded-md text-center" onclick="addParticipant()">Add More Participants</button>
+
+      <button type="submit" class="px-3 py-2 bg-orange-900 text-white font-bold m-3 rounded-md text-center" >Submit</button>
+
+  </form>
+</div>
+
+{% endblock create_event %}
+
+
+{% block formscript %}
+
+function addParticipant() {
+  let wrapper = document.getElementById("participant-wrapper");
+
+  let div = document.createElement("div");
+  div.classList.add("participant-row");
+
+  div.innerHTML = `
+    <input type="text" class="shadow-lg px-3 py-2 my-2 rounded-md focus:bg-orange-400" name="participant_name[]" placeholder="Participant Name" required>
+    <input type="email" class="shadow-lg px-3 py-2 my-2 rounded-md focus:bg-orange-400" name="participant_email[]" placeholder="Participant Email" required>
+    <button type="button" onclick="this.parentElement.remove()">−</button>
+  `;
+
+  wrapper.appendChild(div);
+}
+{% endblock formscript %}

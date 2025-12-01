@@ -1,0 +1,204 @@
+{% extends "navbar.html" %}
+
+{% block script_for_carousel %}
+let index = 0;
+const slides = document.querySelectorAll('#slider > div');
+const slider = document.getElementById('slider');
+const nextbtn = document.getElementById("next");
+const prevbtn = document.getElementById("prev");
+
+const update_slide = () => {
+   slider.style.transform = `translateX(-${index*100}%)`
+};
+
+const next_slide = () => {
+    index = (index + 1) % slides.length;
+    update_slide();
+};
+const prev_slide =()=>{
+  index = (index - 1 + slides.length)% slides.length ;
+  update_slide();
+};
+
+nextbtn.addEventListener("click", next_slide);
+prevbtn.addEventListener("click", prev_slide);
+setInterval(next_slide, 2000); 
+{% endblock script_for_carousel %}
+
+
+
+{% block home_page %}
+{% load static %}
+{% comment %} carousel {% endcomment %}
+<section>
+  <div class="relative w-full overflow-hidden mt-10">
+    <div id="slider" class="flex transition-transform duration-700">
+      <div class="min-w-full relative flex items-center justify-center">
+        <img class = "h-[600px] w-full object-cover " src="{% static 'images/photo-1558008258-3256797b43f3.jpg' %}" alt="" />
+        <div
+          class="absolute inset-0 flex flex-col items-baseline justify-center bg-black/60 text-white"
+        >
+          <h2 class="text-6xl text-orange-400 font-bold mx-10">
+            We Make It Happen!
+          </h2>
+          <p class="mt-2 text-lg w-1/2 mx-10">
+            Expert event management services delivering seamless planning,
+            creative ideas, and flawless execution for weddings, corporate
+            events, and celebrations. Your vision, perfectly brought to
+            life with professionalism and style.
+          </p>
+        </div>
+      </div>
+      <div class="min-w-full relative flex items-center justify-center">
+        <img class = "h-[600px] w-full object-cover" src="{% static 'images/pexels-alex-andrews-271121-1983046.jpg' %}" alt="" />
+        <div
+          class="absolute inset-0 flex flex-col items-baseline justify-center bg-black/60 text-white"
+        >
+          <h2 class="text-6xl text-orange-400 font-bold w-1/3 mx-10">
+            Creating unforgettable moments, one event at a time!
+          </h2>
+          <p class="mt-2 text-lg w-1/2 mx-10">
+            Expert planning and personalized service to ensure every event
+            is memorable, unique, and flawlessly executed.
+          </p>
+        </div>
+      </div>
+      <div class="min-w-full relative flex items-center justify-center">
+        <img class = "h-[600px] w-full object-cover" src="{% static 'images/pexels-teddy-2263436.jpg' %}" alt="" />
+        <div
+          class="absolute inset-0 flex flex-col items-baseline justify-center bg-black/60 text-white"
+        >
+          <h2 class="text-6xl text-orange-400 w-1/2 font-bold mx-10">
+            Your event, our passion!
+          </h2>
+          <p class="mt-2 text-lg w-1/2 mx-10">
+            Bringing your dream event to life with flawless execution.
+          </p>
+        </div>
+      </div>
+    </div>
+    <button
+      id="prev"
+      class="absolute left-3 top-1/2 -translate-y-1/2 text-white px-3 py-2 rounded-full text-2xl hover:text-black"
+    >
+      &lt;
+    </button>
+    <button
+      id="next"
+      class="absolute right-3 top-1/2 -translate-y-1/2 text-white px-3 py-2 rounded-full text-2xl hover:text-black"
+    >
+      &gt;
+    </button>
+  </div>
+</section>
+{% comment %} Experties {% endcomment %}
+<section>
+  <h1 class="text-center font-bold text-5xl my-20">Our Experties</h1>
+  <div class="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 justify-around items-center gap-6 m-10">
+    <div
+      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
+    >
+      <div>
+        <img
+          class="rounded-lg w-[10vw]"
+          src="{% static 'images/icons/friends-logo-handmade-silhouette_589800-339.jpg' %}"
+          alt=""
+        />
+      </div>
+      <div class=" ">
+        <h3 class="font-semibold text-2xl">Friendly Team</h3>
+        <p>More Than 250 Teams</p>
+      </div>
+    </div>
+    <div
+      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
+    >
+      <div>
+        <img
+          class="rounded-lg w-[10vw]"
+          src="{% static 'images/icons/balloon-icon-logo-template-illustration-design-vector.jpg' %}"
+          alt=""
+        />
+      </div>
+      <div class=" ">
+        <h3 class="font-semibold text-2xl">Prefect Venues</h3>
+        <p>The Best & Perfect Venues</p>
+      </div>
+    </div>
+    <div
+      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
+    >
+      <div>
+        <img
+          class="rounded-lg w-[10vw]"
+          src="{% static 'images/icons/pngtree-food-logo-png-image_5296974.png' %}"
+          alt=""
+        />
+      </div>
+      <div class=" ">
+        <h3 class="font-semibold text-2xl">Delicious Foods</h3>
+        <p>From The Best Chefs</p>
+      </div>
+    </div>
+    <div
+      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
+    >
+      <div>
+        <img
+          class="rounded-lg w-[10vw]"
+          src="{% static 'images/icons/safety-shield_24908-38888.jpg' %}"
+          alt=""
+        />
+      </div>
+      <div class=" ">
+        <h3 class="font-semibold text-2xl">24/7 Hours Support</h3>
+        <p>Anytime Anywhere</p>
+      </div>
+    </div>
+    <div
+      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
+    >
+      <div>
+        <img
+          class="rounded-lg w-[10vw]"
+          src="{% static 'images/icons/phone-call-flat-colours_78370-8170.jpg' %}"
+          alt=""
+        />
+      </div>
+      <div class=" ">
+        <h3 class="font-semibold text-2xl">Top-notch Safety</h3>
+        <p>Safer Than Anywhere</p>
+      </div>
+    </div>
+    <div
+      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
+    >
+      <div>
+        <img
+          class="rounded-lg w-[10vw]"
+          src="{% static 'images/icons/pngtree-idea-vector-icon-with-light-bulb-symbol-png-image_6261889.jpg' %}"
+          alt=""
+        />
+      </div>
+      <div class=" ">
+        <h3 class="font-semibold text-2xl">Brilliant Ideas</h3>
+        <p>NASA's Best Team On Board</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% comment %} About Us {% endcomment %}
+<section>
+  <div>
+    <h1 class="text-center font-bold text-5xl my-20">About Us</h1>
+  </div>
+</section>
+{% comment %} contact {% endcomment %}
+<section>
+  <div>
+    <h1 class="text-center font-bold text-5xl my-20">Contact</h1>
+  </div>
+</section>
+
+{% endblock home_page %}
+

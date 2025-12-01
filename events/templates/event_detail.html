@@ -1,0 +1,74 @@
+{% extends "navbar.html" %}
+
+{% block event_detail %}
+
+{% load static %}
+
+{% comment %} top {% endcomment %}
+<div class="relative ">
+  <img 
+    class="w-full h-80 my-5 rounded-lg object-cover" 
+    src="{% static 'images/premium_photo-1661884752233-eac0b5efe655.jpg' %}" alt=""/>
+  <div class="absolute inset-0 flex px-6 items-center justify-center  bg-gray-900/50 rounded-lg">
+    <span class="text-6xl font-bold text-white "> GOOD-DAY EVENTS
+    </span>
+  </div>
+</div>
+{% comment %} content {% endcomment %}
+<div>
+  <div class = "grid grid-cols-1 xl:grid-cols-2 xl:gap-8 my-10">
+    <div>
+      <div>
+        <h1 class="font-bold text-4xl w-fit bg-orange-900 text-amber-400 px-8 py-3 rounded-xl shadow-amber-500 shadow-lg">{{event.name}}</h1>
+      </div>
+      <div>
+        {% if event.image %}
+					<img
+						class="my-10"
+						src="{{ event.image.url }}"
+						alt="Event Image"
+					/>
+					{% else %}
+					<div class="bg-white rounded-sm text-center min-w-full h-full p-10 my-10">No Image</div>
+					{% endif %}
+      </div>
+    </div>
+    <div>
+      <h1 class="font-bold text-2xl text-center my-10">Description</h1>
+      <p class="font-semibold xl:my-10 italic bg-indigo-900 text-amber-400 px-8 py-3 rounded-lg shadow-lg" >{{event.description}}</p>
+    </div>
+  </div>
+  <div class = "flex flex-col  gap-6">
+    <span class="font-bold text-lg w-full bg-yellow-400 px-6 py-3  rounded-md  shadow-xl">Category:  {{event.category.category_name}}  </span>
+    <span class="font-semibold text-md w-full bg-yellow-400 px-6 py-3 italic text-gray-500  rounded-md  shadow-xl"> Category-Description:   <br /> {{event.category.category_description}}  </span>
+</div>
+{% comment %} info {% endcomment %}
+</div>
+  <div class="">
+    <div class ="grid lg:grid-cols-4 grid-cols-1 gap-6 mt-10">
+      <span class="font-bold text-lg w-full bg-orange-400 px-6 py-3   rounded-md  shadow-xl">Date:       {{event.date}}</span>
+      <span class="font-bold text-lg w-full bg-orange-400 px-6 py-3  rounded-md  shadow-xl">Time:       {{event.time}}</span>
+      <span class="font-bold text-lg w-full bg-orange-400 px-6 py-3  rounded-md  shadow-xl">Participants:       {{event.participant.count}}</span>
+      <span class="font-bold text-lg w-full bg-orange-400 px-6 py-3  rounded-md  shadow-xl">Location:       {{event.location}}</span>
+  </div>
+    
+</div>
+
+{% comment %} participant {% endcomment %}
+
+<div class="my-4">
+        <h1 class= "font-bold text-2xl text-center">Participants</h1>
+        <ul class="my-2 bg-orange-400 w-fit mx-auto rounded-md">
+          {% for participant in participants  %}
+            <div class="flex items-baseline px-3">
+              <div class="w-2 h-2 rounded-full bg-black"></div>
+              <li class= "font-semibold text-xl py-2 px-2">{{participant.name}}</li>
+            </div>
+          {% endfor %}
+        </ul>
+</div>
+
+
+{% endblock event_detail %}
+
+
