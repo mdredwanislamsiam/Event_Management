@@ -1,20 +1,16 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 
 class Category(models.Model):
     category_name = models.CharField(max_length=100)
     category_description = models.CharField(max_length=300)
 
-class Participant(models.Model):
-    name = models.CharField(max_length=50)
-    email = models.EmailField()
-
 
 
 class Event(models.Model):
-    participant = models.ManyToManyField(Participant, related_name="events")
-    image = models.ImageField(null = True, blank= True)
+    participant = models.ManyToManyField(User, related_name="events")
+    image = models.ImageField(null=True, blank=True, default='no_image.jpg')
     name  = models.CharField(max_length=30)
     description = models.CharField(max_length=300)
     date = models.DateField()

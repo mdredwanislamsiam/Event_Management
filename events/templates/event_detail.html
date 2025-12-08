@@ -1,6 +1,6 @@
-{% extends "navbar.html" %}
+{% extends navbar %}
 
-{% block event_detail %}
+{% block content %}
 
 {% load static %}
 
@@ -62,13 +62,13 @@
           {% for participant in participants  %}
             <div class="flex items-baseline px-3">
               <div class="w-2 h-2 rounded-full bg-black"></div>
-              <li class= "font-semibold text-xl py-2 px-2">{{participant.name}}</li>
+              <li class= "font-semibold text-xl py-2 px-2">{{participant.first_name}} {{participant.last_name}}</li>
             </div>
           {% endfor %}
         </ul>
 </div>
 
 
-{% endblock event_detail %}
+{% endblock content %}
 
 

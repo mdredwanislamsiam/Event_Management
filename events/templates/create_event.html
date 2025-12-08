@@ -1,6 +1,6 @@
-{% extends "navbar.html" %}
+{% extends navbar %}
 
-{% block create_event %}
+{% block content %}
 {% load static %}
 
 <style>
@@ -14,7 +14,7 @@
     outline: none !important;
   }
   
-  </style>
+</style>
 
 {% comment %} messages {% endcomment %}
 <div>
@@ -35,9 +35,24 @@
     {% csrf_token %}
   
     {{ form }}
+    
+    <div>
+      <label class="my-2 ">Category</label>
+        <select 
+          name="category_select"
+          class="px-3 py-2 rounded w-full mb-3"
+        >
+          <option value=""></option>
+          {% for cat in categories %}
+            <option value="{{cat.id}}">
+              {{cat.category_name}}
+            </option>
+          {% endfor %}
+        </select>
+    </div>
     {{category_form}}
   
-    <h3 class="mx-auto w-fit px-4 py-2 rounded text-xl">
+    {% comment %} <h3 class="mx-auto w-fit px-4 py-2 rounded text-xl">
       Participants
     </h3>
     
@@ -48,16 +63,16 @@
         </div>
       </div>
       
-      <button type="button" class="px-3 py-2 bg-orange-400 m-3 rounded-md text-center" onclick="addParticipant()">Add More Participants</button>
+      <button type="button" class="px-3 py-2 bg-orange-400 m-3 rounded-md text-center" onclick="addParticipant()">Add More Participants</button> {% endcomment %}
 
       <button type="submit" class="px-3 py-2 bg-orange-900 text-white font-bold m-3 rounded-md text-center" >Submit</button>
 
   </form>
 </div>
 
-{% endblock create_event %}
+{% endblock content %}
 
-
+{% comment %} 
 {% block formscript %}
 
 function addParticipant() {
@@ -74,4 +89,4 @@ function addParticipant() {
 
   wrapper.appendChild(div);
 }
-{% endblock formscript %}
+{% endblock formscript %} {% endcomment %}

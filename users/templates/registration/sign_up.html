@@ -1,0 +1,39 @@
+{% extends "navbar.html" %}
+{% block sign_up_form %}
+<div class = "w-1/2 mx-auto">
+    <h1 class="my-5 text-2xl font-semibold text-center">Sign-UP</h1>
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{message}}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <div>
+        {% if form.non_field_errors %}
+            <ul>
+                {% for error in form.non_field_errors  %}
+                    <li class="bg-red-500 p-2 text-center">{{error}}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form action="" method="POST" class="">
+            {% csrf_token %}
+            {% for field in form  %}
+                <p>
+                    <label for="{{field.id_for_label}}">{{field.label}}</label>
+                    {{field}}
+                    {% if field.errors %}
+                        <ul>
+                            {% for error in field.errors  %}
+                                <li class="bg-red-500 p-2 text-center">{{error}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </p>
+            {% endfor %}
+            <button type = "submit" class="bg-blue-600 py-1 px-2 shadow-md mx-auto text-center w-full my-3 rounded focus:bg-green-600 mb-20 text-white" >Sign Up</button>
+        </form>
+    </div>
+</div>
+{% endblock sign_up_form %}

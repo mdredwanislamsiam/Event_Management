@@ -40,6 +40,8 @@ class CategoryModelForm(StyledFormMixin,forms.ModelForm):
        
     def __init__(self, *arg, **kwarg):
         super().__init__(*arg, **kwarg)
+        self.fields['category_name'].required = False
+        self.fields['category_description'].required = False
         self.apply_styled_widgets()
 
 # django model form

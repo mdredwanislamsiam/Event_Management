@@ -7,6 +7,18 @@
     <link rel="stylesheet" href="{% static 'css/output.css' %}" />
     <title>Document</title>
   </head>
+  <style>
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none !important;
+    }
+    
+    *:focus-visible {
+      outline: none !important;
+    }
+    
+  </style>
   <body>
     <section class="p-10 bg-gray-200 max-w-11/12 mx-auto">
       {% comment %} Nav-Bar {% endcomment %}
@@ -24,28 +36,18 @@
         </div>
         {% comment %} for pc {% endcomment %}
         <div>
-          <div class="hidden md:flex items-center gap-6 my-10 text-gray-500">
-            <a href="{% url 'home' %}" class="hover:text-black">Home</a>
-            <a href="{% url 'dashboard' %}" class="hover:text-black">Dashboard</a>
-            <a href="{% url 'events' %}" class="hover:text-black">Events</a>
-            <a href="" class="hover:text-black">About Us</a>
-            <a href="" class="hover:text-black">Contact</a>
-            <button class="p-2 rounded-full hover:bg-gray-200 relative">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                />
-              </svg>
-            </button>
+          <div class="hidden md:flex items-center gap-6 my-10 text-gray-500 font-semibold">
+            <a href="{% url 'home' %}" class="hover:text-black text-sm hover:text-lg ">Home</a>
+            <a href="{% url 'events' %}" class="hover:text-black text-sm hover:text-lg ">Events</a>
+            <a href="{% url 'participant_dashboard' %}" class="hover:text-black text-sm hover:text-lg ">Dashboard</a>
+            <a href="" class="hover:text-black text-sm hover:text-lg ">About Us</a>
+            <a href="" class="hover:text-black text-sm hover:text-lg ">Contact</a>
+            <form action="{% url 'sign_out' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class=" text-black bg-blue-500 py-1 px-3 text-sm hover:text-lg rounded-full ">Log Out</button>
+            </form>
+            
+            
           </div>
         </div>
           {% comment %} For Mobile {% endcomment %}
@@ -58,35 +60,25 @@
         </div>
       </nav>
         <div id ="mobile_menu" class="mt-4 md:hidden hidden bg-white rounded-lg shadow-lg p-4">
-          <a href="{% url 'home' %}" class="block py-2">Home</a>
-            <a href="{% url 'dashboard' %}" class="block py-2">Dashboard</a>
-            <a href="{% url 'events' %}" class="block py-2">Events</a>
-          <a href="" class="block py-2 ">About Us</a>
-          <a href="" class="block py-2 ">Contact</a>
-
+            <a href="{% url 'home' %}" class="hover:text-black hover:text-lg block py-2">Home</a>
+            <a href="{% url 'events' %}" class="hover:text-black hover:text-lg block py-2">Events</a>
+            <a href="{% url 'participant_dashboard' %}" class="hover:text-black hover:text-lg block py-2">Dashboard</a>
+            <a href="" class="hover:text-black  hover:text-lg block py-2 ">About Us</a>
+            <a href="" class="hover:text-black  hover:text-lg block py-2 ">Contact</a>
+            <form action="{% url 'sign_out' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class=" text-black bg-blue-500 py-1 px-3 text-sm hover:text-lg rounded-full ">Log Out</button>
+            </form>
         </div>
-      {% comment %} Carousel {% endcomment %}
+      {% block home_page %}{% endblock home_page %}
+
+      {% block events %}{% endblock events %}
+
+      {% block event_detail %}{% endblock event_detail %}
       
-      {% block home_page %}
-      
-      {% endblock home_page %}
+      {% block create_event %}{% endblock create_event %}
 
-      {% block events %}
-
-      {% endblock events %}
-
-      {% block event_detail %}
-      
-      {% endblock event_detail %}
-
-      {% block dashboard %}
-      
-      {% endblock dashboard %}
-
-      {% block create_event %}
-      
-      {% endblock create_event %}
-
+      {% block content %}{% endblock content %}
 
     </section>
     {% comment %} About Us {% endcomment %} {% comment %}
