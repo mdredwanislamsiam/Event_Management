@@ -42,6 +42,7 @@
             <a href="{% url 'organizer_dashboard' %}" class="hover:text-black text-sm hover:text-lg ">Dashboard</a>
             <a href="" class="hover:text-black text-sm hover:text-lg ">About Us</a>
             <a href="" class="hover:text-black text-sm hover:text-lg ">Contact</a>
+            <a href="{% url 'profile' %}" class="hover:text-black text-sm hover:text-lg ">Profile</a>
             <form action="{% url 'sign_out' %}" method="POST">
               {% csrf_token %}
               <button type="submit" class=" text-black bg-blue-500 py-1 px-3 text-sm hover:text-lg rounded-full ">Log Out</button>
@@ -63,6 +64,8 @@
             <a href="{% url 'organizer_dashboard' %}" class="hover:text-black hover:text-lg block py-2">Dashboard</a>
             <a href="" class="hover:text-black hover:text-lg block py-2 ">About Us</a>
             <a href="" class="hover:text-black hover:text-lg block py-2 ">Contact</a>
+            <a href="{% url 'profile' %}" class="hover:text-black  hover:text-lg block py-2 ">Profile</a>
+
             <form action="{% url 'sign_out' %}" method="POST">
               {% csrf_token %}
               <button type="submit" class=" text-black bg-blue-500 py-1 px-3 text-sm hover:text-lg rounded-full ">Log Out</button>
@@ -75,7 +78,9 @@
       {% block event_detail %}{% endblock event_detail %}
       
       {% block create_event %}{% endblock create_event %}
-
+      
+      {% block profile_block %}{% endblock profile_block %}
+      
       {% block content %}{% endblock content %}
 
     </section>

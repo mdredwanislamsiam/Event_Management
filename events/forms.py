@@ -3,7 +3,7 @@ from events.models import Event, Category
 
 class StyledFormMixin: 
     
-    default_style = "mx-auto shadow-lg px-3 py-2 my-2 rounded-md"
+    default_style = "mx-auto shadow-lg px-3 py-2 my-2 rounded-md w-full"
     def apply_styled_widgets(self): 
         for field_name, field in self.fields.items():
             if isinstance(field.widget, forms.TextInput):
@@ -28,7 +28,16 @@ class StyledFormMixin:
                 field.widget.attrs.update({
                     'class': f"w-full {self.default_style} bg-white",
                 })
-           
+            else: 
+                field.widget.attrs.update({
+                    'class': f"{self.default_style} my-2", 
+                    'placeholder': f"Enter {field.label.lower()}"
+                })
+    
+    def __init__(self, *arg, **kwarg):
+        super().__init__(*arg, **kwarg)
+        self.apply_styled_widgets()
+
 
 class CategoryModelForm(StyledFormMixin,forms.ModelForm):
     class Meta: 
@@ -57,9 +66,6 @@ class EventModelForm( StyledFormMixin, forms.ModelForm):
             
         }
         
-    def __init__(self, *arg, **kwarg):
-        super().__init__(*arg, **kwarg)
-        self.apply_styled_widgets()
-        
+    
 
       

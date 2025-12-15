@@ -272,7 +272,7 @@
 				  
 				  <div class="grid sm:grid-cols-3 sm:items-center gap-6 sm:gap-10 mx-4 mt-6">
 					
-					<a href="{% url 'event_detail' %}?id={{event.id}}">
+					<a href="{% url 'event_detail' event.id %}">
 						<button class="px-4 py-2 bg-orange-400 rounded-md text-center font-semibold w-full sm:w-auto hover:bg-orange-700">
 						  View Details
 						</button>

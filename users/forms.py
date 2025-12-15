@@ -1,7 +1,14 @@
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, PasswordResetForm, SetPasswordForm
 from django import forms
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 import re
+from events.forms import StyledFormMixin
+from users.models import CustomUser
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
+
 
 class CustomSignUpForm(forms.ModelForm): 
     password = forms.CharField(widget=forms.PasswordInput)
@@ -63,9 +70,6 @@ class CustomSignUpForm(forms.ModelForm):
                })
         
         
-        
-        
-        
 class CustomSignInForm(AuthenticationForm): 
     def __init__(self, *args, **kwargs): 
         super().__init__(*args, **kwargs)
@@ -112,3 +116,21 @@ class CreateGroupForm( forms.ModelForm):
             }), 
         }
     
+
+class CustomPasswordChangeForm(StyledFormMixin, PasswordChangeForm): 
+    pass
+
+ 
+class CustomPasswordResetForm(StyledFormMixin, PasswordResetForm): 
+    pass
+
+
+class CustomPasswordResetConfirmForm(StyledFormMixin, SetPasswordForm): 
+    pass
+
+
+class EditProfileForm(StyledFormMixin, forms.ModelForm): 
+    class Meta: 
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address', 'bio', 'profile_image']
+        

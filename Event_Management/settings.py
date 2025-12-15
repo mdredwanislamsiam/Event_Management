@@ -28,6 +28,9 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com',
                         'http://127.0.0.1:8000']
 
@@ -35,6 +38,9 @@ CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com',
 # Application definition
 
 INSTALLED_APPS = [
+    'events',
+    'users',
+    'core',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,9 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "debug_toolbar",
-    'events',
-    'users', 
-    'core', 
+    
 ]
 
 MIDDLEWARE = [
@@ -104,7 +108,7 @@ WSGI_APPLICATION = 'Event_Management.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default='postgresql://event_mangement_qan2_user:aEgKQDY2nKNhbe3a4ES7j0jAlIw4WP0W@dpg-d4mp4vshg0os73c1eh60-a.oregon-postgres.render.com/event_mangement_qan2',
+        default='postgresql://event_management_7aeq_user:N8IIwZXelBVqn5624kfsjvGpqxfGBfDv@dpg-d4vop9u3jp1c73epp0o0-a.oregon-postgres.render.com/event_management_7aeq',
         conn_max_age=600
     )
 }
@@ -139,7 +143,7 @@ INTERNAL_IPS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/DHAKA'
 
 USE_I18N = True
 

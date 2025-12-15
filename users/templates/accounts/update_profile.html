@@ -1,0 +1,41 @@
+{% extends navbar %} 
+{% block content %}
+
+<div class="group fixed inset-y-0 left-0 z-0">
+	<div class="w-64 h-full"></div>
+
+	<aside
+		class="absolute left-0 top-64 h-64 w-64 my-auto rounded-2xl bg-orange-800/90 shadow-2xl -transform -translate-x-full group-hover:translate-x-2 transition-transform duration-500 ease-in-out">
+		<div class="p-4">
+			<h2 class="text-xl font-semibold text-white text-center">Menu</h2>
+		</div>
+
+		<nav class="mt-6 text-white">
+			<a href="{% url 'profile' %}" class="block py-2 px-4 hover:bg-gray-500">Profile</a>
+			<a href="{% url 'edit_profile' %}" class="block py-2 px-4 hover:bg-gray-500">Edit Profile</a>
+			<a href="{% url 'password_change' %}" class="block py-2 px-4 hover:bg-gray-500">Change Password</a>
+		</nav>
+	</aside>
+</div>
+
+<div class="w-1/2 mx-auto">
+	<h1 class="my-5 text-2xl font-semibold text-center">Update Profile</h1>
+	<div>
+		{% if messages %} {% for message in messages %}
+		<p>{{message}}</p>
+		{% endfor %} {% endif %}
+	</div>
+	<div>
+		<form action="" method="POST" enctype="multipart/form-data">
+			{% csrf_token %} {% comment %} <input type="text" placeholder="Enter username" name="username" />
+			<input type="password" placeholder="Enter Password" name="password" /> {% endcomment %} {{form.as_p}}
+			<button
+				type="submit"
+				class="bg-blue-600 py-1 px-2 mx-auto text-center w-full my-3 rounded focus:bg-green-600 mb-20 text-white">
+				Update Profile
+			</button>
+		</form>
+	</div>
+</div>
+
+{% endblock content %}

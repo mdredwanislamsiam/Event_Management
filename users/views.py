@@ -1,17 +1,27 @@
 from django.shortcuts import render, redirect
-from users.forms import CustomSignUpForm, CustomSignInForm, AssignRoleForm, CreateGroupForm
+from users.forms import CustomSignUpForm, CustomSignInForm, AssignRoleForm, CreateGroupForm, CustomPasswordChangeForm, CustomPasswordResetForm, CustomPasswordResetConfirmForm, EditProfileForm
 from django.contrib import messages
 from django.contrib.auth import login, logout
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponse
 from events.models import Event
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Q
 from datetime import date
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.generic import TemplateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView, PasswordResetView, PasswordResetConfirmView
+from django.urls import reverse_lazy
+from django.contrib.auth import get_user_model
 
 
-# Test for Users
+User = get_user_model()
+
+
+
+""" Supporting Functions """
+
 def is_admin(user): 
     return user.groups.filter(name = 'Admin').exists()
 
@@ -21,9 +31,25 @@ def is_organizer(user):
 def is_participant(user): 
     return user.groups.filter(name = 'Participant').exists()
 
+def navbar_test(user): 
+    user_group = user.groups.first()
+    group_name = 'No Group'
+    if user_group:
+        group_name = user_group.name
+        
+    if group_name == "Admin":
+        navbar = "admin/admin_navbar.html"
+    elif group_name == "Organizer":
+        navbar = "organizer/organizer_navbar.html"
+    elif group_name == 'Participant':
+        navbar = "participant/participant_navbar.html"
+    else:
+        navbar = "navbar.html"
+    return navbar
+    
+    
 
-
-#main functions
+""" Main Functions """
 
 def sign_up(request): 
     form = CustomSignUpForm()
@@ -88,6 +114,7 @@ def user_list(request):
     return render(request, 'admin/user_list.html', {'users': users})
 
 
+
 @login_required
 @user_passes_test(is_admin, login_url='no_permission')
 def admin_dashboard(request):
@@ -125,6 +152,7 @@ def admin_dashboard(request):
     return render(request, 'admin/admin_dashboard.html', context)
 
 
+
 @login_required
 @user_passes_test(is_admin, login_url='no_permission')
 def assign_role(request, user_id): 
@@ -142,6 +170,7 @@ def assign_role(request, user_id):
     return render(request, 'admin/assign_role.html', {'form': form})
 
 
+
 @login_required
 @user_passes_test(is_admin, login_url='no_permission')
 def create_group(request): 
@@ -156,11 +185,13 @@ def create_group(request):
     return render(request, 'admin/create_group.html', {'form': form})
 
 
+
 @login_required
 @user_passes_test(is_admin, login_url='no_permission')
 def group_list(request): 
     groups = Group.objects.all()
     return render(request, 'admin/group_list.html', {'groups': groups})
+
 
 
 @login_required
@@ -173,6 +204,7 @@ def delete_participant(request, user_id):
         return redirect('user_list')
 
 
+
 @login_required
 @user_passes_test(is_admin, login_url='no_permission')
 def delete_group(request, id): 
@@ -182,6 +214,7 @@ def delete_group(request, id):
         messages.success(request, 'Group Deleted Successfully')
         return redirect('group_list')
         
+    
     
 @login_required
 @user_passes_test(is_organizer, login_url='no_permission')   
@@ -218,6 +251,7 @@ def organizer_dashboard(request):
         'title': title
     }
     return render(request, 'organizer/organizer_dashboard.html', context)
+
 
 
 @login_required
@@ -257,6 +291,7 @@ def participant_dashboard(request):
 
 
 @login_required
+
 @user_passes_test(is_participant, login_url='no_permission')
 def rsvp(request, event_id): 
     if request.method == "POST": 
@@ -274,3 +309,110 @@ def rsvp(request, event_id):
         
     return redirect('events')
 
+
+
+""" Class Based Views """
+
+class ProfileView(LoginRequiredMixin, TemplateView): 
+    template_name = 'accounts/profile.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)  
+        group = self.request.user.groups.first()
+        group_name = "No Group"
+        if group:
+            group_name = group.name
+        user = self.request.user
+        context['username'] = user.username
+        context['email'] = user.email
+        context['name'] = user.get_full_name()
+        context['profile_image'] = user.profile_image
+        context['bio'] = user.bio
+        context['phone_number'] = user.phone_number
+        context['address'] = user.address
+        context['designation'] = group_name
+        context['member_since'] = user.date_joined
+        context['last_login'] = user.last_login
+        context['navbar'] = navbar_test(self.request.user)
+        return context
+    
+    
+class PasswordChange(LoginRequiredMixin, PasswordChangeView): 
+    template_name = 'accounts/password_change.html'
+    form_class = CustomPasswordChangeForm
+    def get_context_data(self, **kwargs):
+        context =  super().get_context_data(**kwargs)
+        context['navbar'] = navbar_test(self.request.user)
+        return context
+
+
+class PasswordChangeDone(PasswordChangeDoneView): 
+    template_name = 'accounts/password_change_done.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_group = self.request.user.groups.first()
+        group_name = 'No Group'
+        if user_group:
+            group_name = user_group.name
+
+        if group_name == "Admin":
+            navbar = "admin/admin_navbar.html"
+        elif group_name == "Organizer":
+            navbar = "organizer/organizer_navbar.html"
+        else:
+            navbar = "participant/participant_navbar.html"
+        context['navbar'] = navbar
+        messages.success(self.request, "Your Password Was changed Successfully!")
+        return context
+
+
+class PasswordReset(PasswordResetView):
+    template_name = 'accounts/password_reset.html'
+    form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('sign_in')
+    html_email_template_name = 'accounts/reset_email.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['protocol'] = 'https' if self.request.is_secure else 'http'
+        context['domain'] = self.request.get_host()
+        context['navbar'] = navbar_test(self.request.user)
+        return context
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'A reset email is sent to your email')
+        return super().form_valid(form)
+    
+
+class PasswordResetConfirm(PasswordResetConfirmView): 
+    template_name = 'accounts/password_reset.html'
+    form_class = CustomPasswordResetConfirmForm
+    success_url = reverse_lazy('sign_in')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['navbar'] = navbar_test(self.request.user)
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Password reset Successfull!')
+        return super().form_valid(form)
+
+
+class EditProfileView(LoginRequiredMixin, UpdateView): 
+    model = User
+    form_class = EditProfileForm
+    template_name = 'accounts/update_profile.html' 
+    context_object_name = 'form'
+    
+    def get_object(self):
+        return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['navbar'] = navbar_test(self.request.user)
+        return context
+    
+    def form_valid(self, form): 
+        form.save()
+        return redirect('profile')
