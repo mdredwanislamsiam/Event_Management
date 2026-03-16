@@ -105,13 +105,25 @@ WSGI_APPLICATION = 'Event_Management.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         # Replace this value with your local database's connection string.
+#         default='postgresql://event_management_7aeq_user:N8IIwZXelBVqn5624kfsjvGpqxfGBfDv@dpg-d4vop9u3jp1c73epp0o0-a.oregon-postgres.render.com/event_management_7aeq',
+#         conn_max_age=600
+#     )
+# }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default='postgresql://event_management_7aeq_user:N8IIwZXelBVqn5624kfsjvGpqxfGBfDv@dpg-d4vop9u3jp1c73epp0o0-a.oregon-postgres.render.com/event_management_7aeq',
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('dbname'),
+        'USER': config('user'),
+        'PASSWORD': config('password'),
+        'HOST': config('host'),
+        'PORT': config('port'),
+    }
 }
+
 
 
 # Password validation
@@ -171,7 +183,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
-EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 # password associated with above email-id (not the regular password)
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
