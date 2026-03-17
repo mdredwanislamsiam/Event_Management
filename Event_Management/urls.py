@@ -25,8 +25,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('home/', home, name = 'home'), 
+    path('', home, name = 'home'), 
     path('events/', include('events.urls')), 
     path('users/', include('users.urls') ), 
+    path('', include('core.urls')),
     path('no_permission/', no_permission, name="no_permission")
 ] + debug_toolbar_urls() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,18 +1,693 @@
 {% extends "admin/admin_navbar.html" %}
-
 {% block content %}
-<div class="w-1/2 mx-auto my-8">
-    <div>
-        {% if messages %}
-            {% for message in messages  %}
-                <p>{{message}}</p>
-            {% endfor %}
-        {% endif %}
+{% load static %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
+
+  .page {
+    background: #fff;
+    min-height: 100vh;
+    padding: 40px;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
+  .dash-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(95deg, #754912 20%, #CF7C15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  /* ── Layout ── */
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 28px;
+    align-items: start;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── Main Form Card ── */
+  .form-card {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .form-card-head {
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .form-head-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(249,115,22,0.14);
+    border: 1px solid rgba(249,115,22,0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .form-head-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .form-head-text h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .form-head-text p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-top: 3px;
+  }
+
+  .form-body {
+    padding: 28px 32px 32px;
+  }
+
+  /* ── Field Styling — overrides Django widget output ── */
+  .form-body p {
+    margin-bottom: 22px;
+  }
+
+  .form-body label,
+  .field-label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  /* Text inputs */
+  .form-body input[type="text"],
+  .form-body input[type="email"],
+  .form-body input[type="password"],
+  .form-body input[type="number"],
+  .form-body input[type="url"],
+  .form-body textarea,
+  .form-body select {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 13px 16px;
+    color: #fff;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .form-body input:focus,
+  .form-body textarea:focus,
+  .form-body select:focus {
+    border-color: rgba(249,115,22,0.55);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.08);
+  }
+
+  .form-body input::placeholder,
+  .form-body textarea::placeholder {
+    color: #4b5563;
+  }
+
+  .form-body textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  /* ── Multi-select (permissions widget) ── */
+  .form-body select[multiple],
+  .form-body select[size] {
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    height: auto;
+    min-height: 220px;
+  }
+
+  .form-body select[multiple] option,
+  .form-body select[size] option {
+    padding: 10px 16px;
+    font-size: 0.83rem;
+    color: #d1d5db;
+    background: #1a1a1a;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .form-body select[multiple] option:checked,
+  .form-body select[size] option:checked {
+    background: rgba(249,115,22,0.2);
+    color: #f97316;
+    font-weight: 600;
+  }
+
+  .form-body select[multiple] option:hover,
+  .form-body select[size] option:hover {
+    background: rgba(249,115,22,0.1);
+  }
+
+  /* Select hint */
+  .select-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: #4b5563;
+  }
+
+  .select-hint svg {
+    width: 12px;
+    height: 12px;
+    stroke: #4b5563;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  /* ── Checkbox / filter row above multiselect ── */
+  .perm-search-wrap {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .perm-search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    stroke: #6b7280;
+    fill: none;
+    pointer-events: none;
+  }
+
+  .perm-search {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 9px 12px 9px 34px;
+    color: #d1d5db;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+
+  .perm-search::placeholder { color: #4b5563; }
+
+  .perm-search:focus {
+    border-color: rgba(249,115,22,0.4);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.06);
+  }
+
+  /* ── Submit button ── */
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    padding: 15px 32px;
+    border-radius: 14px;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 8px 20px rgba(249,115,22,0.25);
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .submit-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s;
+  }
+
+  .submit-btn:hover {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(249,115,22,0.38);
+  }
+
+  .submit-btn:hover svg { transform: translateX(4px); }
+  .submit-btn:active  { transform: translateY(-1px) scale(0.99); }
+
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6b7280;
+    text-decoration: none;
+    margin-top: 14px;
+    transition: color 0.2s;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .back-link svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s;
+  }
+
+  .back-link:hover { color: #f97316; }
+  .back-link:hover svg { transform: translateX(-3px); }
+
+  /* ── Side Panel ── */
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .info-card {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 22px 24px;
+    transition: all 0.25s;
+  }
+
+  .info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(249,115,22,0.1);
+  }
+
+  .info-card-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-card-title svg {
+    width: 14px;
+    height: 14px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.82rem;
+    color: #9ca3af;
+    line-height: 1.6;
+  }
+
+  .tip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(249,115,22,0.5);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* Steps card */
+  .step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .step-item:first-child { padding-top: 0; }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #f97316;
+    flex-shrink: 0;
+  }
+
+  .step-text {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    line-height: 1.55;
+    padding-top: 4px;
+  }
+
+  .step-text strong {
+    color: #d1d5db;
+    font-weight: 600;
+  }
+
+  /* Message alert */
+  .msg-alert {
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.35);
+    color: #fdba74;
+    padding: 14px 20px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Error messages from Django form */
+  .form-body .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+  }
+
+  .form-body .errorlist li {
+    font-size: 0.78rem;
+    color: #f87171;
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .form-body .errorlist li::before {
+    content: '⚠';
+    font-size: 0.7rem;
+  }
+
+  /* Help text */
+  .form-body .helptext,
+  .form-body span.helptext {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.63rem;
+    color: #4b5563;
+    letter-spacing: 0.06em;
+    margin-top: 7px;
+  }
+
+  /* Divider between form sections */
+  .form-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 24px 0;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(249,115,22,0.2);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .form-layout {
+      grid-template-columns: 1fr;
+    }
+    .side-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .page { padding: 20px 16px; }
+    .form-body { padding: 22px 20px 24px; }
+    .form-card-head { padding: 20px; }
+    .side-panel { grid-template-columns: 1fr; }
+    .dash-title { font-size: 2rem; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="container mx-auto mb-10" style="max-width:1100px">
+    <span style="color:#e5670d" class="font-mono font-bold text-lg tracking-[0.25em] uppercase">Admin Panel</span>
+    <h1 class="dash-title">Create Group</h1>
+  </div>
+
+  <!-- MESSAGES -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg-alert">
+        <span style="font-size:1.2rem">🔔</span>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- LAYOUT -->
+  <div class="form-layout">
+
+    <!-- ── Main Form Card ── -->
+    <div class="form-card">
+
+      <div class="form-card-head">
+        <div class="form-head-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="form-head-text">
+          <h2>New Permission Group</h2>
+          <p>Define a group name and assign permissions</p>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <form action="" method="POST" id="create-group-form">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <ul class="errorlist" style="margin-bottom:16px">
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <!-- Group Name field -->
+          {% if form.name %}
+            <div style="margin-bottom:22px">
+              <label class="field-label" for="{{ form.name.id_for_label }}">
+                Group Name
+              </label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <ul class="errorlist">
+                  {% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+              {% if form.name.help_text %}
+                <span class="helptext">{{ form.name.help_text }}</span>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <hr class="form-divider">
+
+          <!-- Permissions multi-select -->
+          {% if form.permissions %}
+            <div>
+              <div class="section-label">Assign Permissions</div>
+
+                
+              {{ form.permissions }}
+
+              {% if form.permissions.errors %}
+                <ul class="errorlist">
+                  {% for error in form.permissions.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+
+              <div class="select-hint">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                Hold <kbd style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:1px 5px;font-family:inherit">Ctrl</kbd> (or <kbd style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:1px 5px;font-family:inherit">⌘</kbd> on Mac) to select multiple permissions
+              </div>
+            </div>
+
+          {% else %}
+            {# Fallback: render everything Django outputs #}
+            {{ form }}
+          {% endif %}
+
+          <hr class="form-divider">
+
+          <button type="submit" class="submit-btn">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Create Group
+            <svg viewBox="0 0 16 16" style="width:16px;height:16px"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </button>
+
+          <a href="{% url 'group_list' %}" class="back-link">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to Groups
+          </a>
+
+        </form>
+      </div>
     </div>
-    <form action="" method="POST">
-        {% csrf_token %}
-        {{form}}
-        <button type = "submit" class="px-2 py-1 text-white bg-blue-400 rounded">Create Group</button>
-    </form>
+
+    <!-- ── Side Panel ── -->
+    <div class="side-panel">
+
+      <!-- Tips card -->
+      <div class="info-card">
+        <div class="info-card-title">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Group Tips
+        </div>
+        <div class="tip-list">
+          <div class="tip-item">
+            <span class="tip-dot"></span>
+            Give the group a clear, descriptive name like <em style="color:#d1d5db">"Event Managers"</em> or <em style="color:#d1d5db">"Viewers"</em>.
+          </div>
+          <div class="tip-item">
+            <span class="tip-dot"></span>
+            Permissions follow the pattern <em style="color:#d1d5db">action_model</em> — e.g. <code style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:#f97316;background:rgba(249,115,22,0.1);padding:1px 5px;border-radius:4px">add_event</code>.
+          </div>
+          <div class="tip-item">
+            <span class="tip-dot"></span>
+            You can always edit the group later to add or remove permissions.
+          </div>
+          <div class="tip-item">
+            <span class="tip-dot"></span>
+            Keep groups minimal — assign only the permissions each role truly needs.
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps card -->
+      <div class="info-card">
+        <div class="info-card-title">
+          <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          How It Works
+        </div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Name the group</strong> — choose a role-based name that reflects the level of access.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Pick permissions</strong> — use the filter box to quickly find what you need.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Create the group</strong> — then assign users to it from the User Management page.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
 </div>
+
 {% endblock content %}

@@ -2,27 +2,63 @@
 
 {% block script_for_carousel %}
 let index = 0;
-const slides = document.querySelectorAll('#slider > div');
-const slider = document.getElementById('slider');
-const nextbtn = document.getElementById("next");
-const prevbtn = document.getElementById("prev");
+const INTERVAL = 4000;
+const slides = document.querySelectorAll('.carousel-slide');
+const dots = document.querySelectorAll('.carousel-dot');
+const track = document.getElementById('slider');
+const counter = document.getElementById('counter-current');
+const progress = document.getElementById('carousel-progress');
 
-const update_slide = () => {
-   slider.style.transform = `translateX(-${index*100}%)`
+let timer, progressTimer;
+
+const goTo = (n) => {
+  slides[index].classList.remove('is-active');
+  dots[index].classList.remove('is-active');
+  index = (n + slides.length) % slides.length;
+  slides[index].classList.add('is-active');
+  dots[index].classList.add('is-active');
+  track.style.transform = `translateX(-${index * 100}%)`;
+  counter.textContent = String(index + 1).padStart(2, '0');
+  resetProgress();
 };
 
-const next_slide = () => {
-    index = (index + 1) % slides.length;
-    update_slide();
-};
-const prev_slide =()=>{
-  index = (index - 1 + slides.length)% slides.length ;
-  update_slide();
+const resetProgress = () => {
+  clearInterval(progressTimer);
+  progress.style.transition = 'none';
+  progress.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progress.style.transition = `width ${INTERVAL}ms linear`;
+      progress.style.width = '100%';
+    });
+  });
 };
 
-nextbtn.addEventListener("click", next_slide);
-prevbtn.addEventListener("click", prev_slide);
-setInterval(next_slide, 2000); 
+const startAuto = () => {
+  clearInterval(timer);
+  timer = setInterval(() => goTo(index + 1), INTERVAL);
+};
+
+document.getElementById('next').addEventListener('click', () => { goTo(index + 1); startAuto(); });
+document.getElementById('prev').addEventListener('click', () => { goTo(index - 1); startAuto(); });
+dots.forEach(dot => dot.addEventListener('click', () => { goTo(+dot.dataset.index); startAuto(); }));
+
+// Pause on hover
+document.querySelector('.carousel-root').addEventListener('mouseenter', () => clearInterval(timer));
+document.querySelector('.carousel-root').addEventListener('mouseleave', startAuto);
+
+// Touch swipe
+let touchStartX = 0;
+document.querySelector('.carousel-root').addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
+document.querySelector('.carousel-root').addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) { goTo(diff > 0 ? index + 1 : index - 1); startAuto(); }
+}, {passive: true});
+
+startAuto();
+resetProgress();
+
+
 {% endblock script_for_carousel %}
 
 
@@ -31,173 +67,1188 @@ setInterval(next_slide, 2000);
 {% load static %}
 {% comment %} carousel {% endcomment %}
 <section>
-  <div class="relative w-full overflow-hidden mt-10">
-    <div id="slider" class="flex transition-transform duration-700">
-      <div class="min-w-full relative flex items-center justify-center">
-        <img class = "h-[600px] w-full object-cover " src="{% static 'images/photo-1558008258-3256797b43f3.jpg' %}" alt="" />
-        <div
-          class="absolute inset-0 flex flex-col items-baseline justify-center bg-black/60 text-white"
-        >
-          <h2 class="text-6xl text-orange-400 font-bold mx-10">
-            We Make It Happen!
-          </h2>
-          <p class="mt-2 text-lg w-1/2 mx-10">
-            Expert event management services delivering seamless planning,
-            creative ideas, and flawless execution for weddings, corporate
-            events, and celebrations. Your vision, perfectly brought to
-            life with professionalism and style.
-          </p>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400&display=swap');
+
+    .carousel-root {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.75s cubic-bezier(0.77, 0, 0.18, 1);
+      will-change: transform;
+    }
+
+    .carousel-slide {
+      min-width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 680px;
+      object-fit: cover;
+      display: block;
+      transform: scale(1.04);
+      transition: transform 6s ease-out;
+      filter: brightness(0.45);
+    }
+
+    .carousel-slide.is-active img {
+      transform: scale(1);
+    }
+
+    /* Gradient overlays */
+    .carousel-slide::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(105deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%),
+        linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Orange accent streak */
+    .carousel-slide::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #f97316, #fbbf24, transparent 70%);
+      z-index: 4;
+      opacity: 0;
+      transition: opacity 0.5s 0.3s;
+    }
+    .carousel-slide.is-active::after { opacity: 1; }
+
+    /* Content */
+    .carousel-content {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 8% 60px;
+      max-width: 980px;
+    }
+
+    .carousel-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #f97316;
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.55s 0.1s, transform 0.55s 0.1s;
+    }
+    .carousel-slide.is-active .carousel-eyebrow {
+      opacity: 1; transform: translateY(0);
+    }
+
+    .carousel-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.8rem, 5.5vw, 6rem);
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.6s 0.2s, transform 0.6s 0.2s;
+    }
+    .carousel-title span { color: #f97316; }
+    .carousel-slide.is-active .carousel-title {
+      opacity: 1; transform: translateY(0);
+    }
+
+    .carousel-desc {
+      font-size: clamp(0.85rem, 1.5vw, 1rem);
+      color: rgba(255,255,255,0.72);
+      line-height: 1.75;
+      max-width: 500px;
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.6s 0.32s, transform 0.6s 0.32s;
+    }
+    .carousel-slide.is-active .carousel-desc {
+      opacity: 1; transform: translateY(0);
+    }
+
+    .carousel-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f97316;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 13px 28px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      width: fit-content;
+      transition: background 0.2s, transform 0.15s;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.6s 0.44s, transform 0.6s 0.44s, background 0.2s;
+    }
+    .carousel-slide.is-active .carousel-cta {
+      opacity: 1; transform: translateY(0);
+    }
+    .carousel-cta:hover { background: #ea6c0a; transform: scale(1.03) !important; }
+
+    /* Nav buttons */
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .carousel-btn:hover {
+      background: #f97316;
+      border-color: #f97316;
+      transform: translateY(-50%) scale(1.08);
+    }
+    #prev { left: 20px; }
+    #next { right: 20px; }
+
+    /* Dots */
+    .carousel-dots {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .carousel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.25s, transform 0.25s, width 0.25s;
+    }
+    .carousel-dot.is-active {
+      background: #f97316;
+      width: 22px;
+      border-radius: 3px;
+    }
+
+    /* Slide counter */
+    .carousel-counter {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 5;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.1em;
+    }
+    .carousel-counter span { color: #f97316; }
+
+    /* Progress bar */
+    .carousel-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: rgba(249,115,22,0.35);
+      z-index: 5;
+      width: 0%;
+      transition: width linear;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .carousel-slide img { height: 520px; }
+      .carousel-content { padding: 0 6% 50px; }
+      .carousel-btn { width: 38px; height: 38px; }
+      #prev { left: 12px; }
+      #next { right: 12px; }
+    }
+    @media (max-width: 480px) {
+      .carousel-eyebrow {font-size: 0.7rem}
+      .carousel-slide img { height: 420px; }
+      .carousel-content { padding: 0 5% 44px; justify-content: flex-end; }
+      .carousel-desc { display: none; }
+      .carousel-cta { padding: 11px 22px; font-size: 0.7rem; }
+    }
+  </style>
+
+  <div class="carousel-root">
+    <div id="slider" class="carousel-track">
+
+      <div class="carousel-slide is-active">
+        <img src="{% static 'images/photo-1558008258-3256797b43f3.jpg' %}" alt="Event planning" />
+        <div class="carousel-content mb-20 md:mb-0 md:mt-10">
+          <div class="carousel-eyebrow">Event Management</div>
+          <h2 class="carousel-title">We Make It <span>Happen!</span></h2>
+          <p class="carousel-desc">Expert event management delivering seamless planning, creative ideas, and flawless execution for weddings, corporate events, and celebrations.</p>
+          <a href="#contact-us" class="carousel-cta">Plan Your Event →</a>
         </div>
       </div>
-      <div class="min-w-full relative flex items-center justify-center">
-        <img class = "h-[600px] w-full object-cover" src="{% static 'images/pexels-alex-andrews-271121-1983046.jpg' %}" alt="" />
-        <div
-          class="absolute inset-0 flex flex-col items-baseline justify-center bg-black/60 text-white"
-        >
-          <h2 class="text-6xl text-orange-400 font-bold w-1/3 mx-10">
-            Creating unforgettable moments, one event at a time!
-          </h2>
-          <p class="mt-2 text-lg w-1/2 mx-10">
-            Expert planning and personalized service to ensure every event
-            is memorable, unique, and flawlessly executed.
-          </p>
+
+      <div class="carousel-slide">
+        <img src="{% static 'images/pexels-alex-andrews-271121-1983046.jpg' %}" alt="Unforgettable moments" />
+        <div class="carousel-content mb-20 md:mb-0 md:mt-10">
+          <div class="carousel-eyebrow">Our Promise</div>
+          <h2 class="carousel-title">Creating <span>Unforgettable</span> Moments</h2>
+          <p class="carousel-desc">Expert planning and personalized service to ensure every event is memorable, unique, and flawlessly executed from start to finish.</p>
+          <a href="#contact-us" class="carousel-cta">Get Started →</a>
         </div>
       </div>
-      <div class="min-w-full relative flex items-center justify-center">
-        <img class = "h-[600px] w-full object-cover" src="{% static 'images/pexels-teddy-2263436.jpg' %}" alt="" />
-        <div
-          class="absolute inset-0 flex flex-col items-baseline justify-center bg-black/60 text-white"
-        >
-          <h2 class="text-6xl text-orange-400 w-1/2 font-bold mx-10">
-            Your event, our passion!
-          </h2>
-          <p class="mt-2 text-lg w-1/2 mx-10">
-            Bringing your dream event to life with flawless execution.
-          </p>
+
+      <div class="carousel-slide">
+        <img src="{% static 'images/pexels-teddy-2263436.jpg' %}" alt="Your event our passion" />
+        <div class="carousel-content mb-20 md:mb-0 md:mt-10">
+          <div class="carousel-eyebrow">Our Passion</div>
+          <h2 class="carousel-title ">Your Event, <span>Our Passion</span></h2>
+          <p class="carousel-desc">Bringing your dream event to life with flawless execution, bold ideas, and a team that genuinely cares about every detail.</p>
+          <a href="#contact-us" class="carousel-cta">Discover More →</a>
         </div>
       </div>
+
     </div>
-    <button
-      id="prev"
-      class="absolute left-3 top-1/2 -translate-y-1/2 text-white px-3 py-2 rounded-full text-2xl hover:text-black"
-    >
-      &lt;
+
+
+    <!-- Nav Buttons -->
+    <button id="prev" class="carousel-btn" aria-label="Previous slide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <button
-      id="next"
-      class="absolute right-3 top-1/2 -translate-y-1/2 text-white px-3 py-2 rounded-full text-2xl hover:text-black"
-    >
-      &gt;
+    <button id="next" class="carousel-btn" aria-label="Next slide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
+
+    <!-- Dots -->
+    <div class="carousel-dots">
+      <button class="carousel-dot is-active" data-index="0" aria-label="Slide 1"></button>
+      <button class="carousel-dot" data-index="1" aria-label="Slide 2"></button>
+      <button class="carousel-dot" data-index="2" aria-label="Slide 3"></button>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="carousel-progress" id="carousel-progress"></div>
   </div>
 </section>
+
+
+
 {% comment %} Experties {% endcomment %}
 <section>
-  <h1 class="text-center font-bold text-5xl my-20">Our Experties</h1>
-  <div class="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 justify-around items-center gap-6 m-10">
-    <div
-      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
-    >
-      <div>
-        <img
-          class="rounded-lg w-[10vw]"
-          src="{% static 'images/icons/friends-logo-handmade-silhouette_589800-339.jpg' %}"
-          alt=""
-        />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+    .exp-wrap {
+      padding: 80px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .exp-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 10%, rgba(249,115,22,0.13) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(249,115,22,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 60% 50%, rgba(120,50,0,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .exp-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #f97316;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .exp-heading {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+      margin: 0 0 56px;
+    }
+    .exp-heading span {
+      background: linear-gradient(95deg, #f97316 20%, #fb923c 55%, #fbbf24 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .exp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .exp-card {
+      position: relative;
+      border-radius: 18px;
+      padding: 28px 24px 26px;
+      background: #1a1a1a;
+      border: 0.5px solid rgba(249,115,22,0.15);
+      overflow: hidden;
+      transition: transform 0.22s ease, border-color 0.22s ease;
+      cursor: default;
+    }
+    .exp-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(249,115,22,0.07) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    .exp-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(249,115,22,0.45);
+    }
+    .exp-card:hover::before {
+      opacity: 1;
+    }
+
+    .exp-icon-ring {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(249,115,22,0.18), rgba(251,146,60,0.08));
+      border: 0.5px solid rgba(249,115,22,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      transition: background 0.25s;
+    }
+    .exp-card:hover .exp-icon-ring {
+      background: linear-gradient(135deg, rgba(249,115,22,0.28), rgba(251,146,60,0.14));
+    }
+    .exp-icon-ring svg {
+      width: 22px;
+      height: 22px;
+      stroke: #f97316;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .exp-card-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #f97316;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+    .exp-card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .exp-card-desc {
+      font-size: 0.82rem;
+      color: #9ca3af;
+      line-height: 1.7;
+    }
+
+    .exp-accent-line {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(249,115,22,0.5), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .exp-card:hover .exp-accent-line { opacity: 1; }
+
+    @media (max-width: 700px) {
+      .exp-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 440px) {
+      .exp-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <div class=" my-20 px-10">
+    <div class="exp-eyebrow">What We Bring</div>
+    <h2 class="exp-heading text-black">Our <span>Expertise</span></h2>
+
+    <div class="exp-grid">
+
+      <div class="exp-card">
+        <div class="exp-icon-ring">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="exp-card-label">People</div>
+        <div class="exp-card-title">Friendly Team</div>
+        <div class="exp-card-desc">Over 250 dedicated specialists working in harmony to make your event extraordinary.</div>
+        <div class="exp-accent-line"></div>
       </div>
-      <div class=" ">
-        <h3 class="font-semibold text-2xl">Friendly Team</h3>
-        <p>More Than 250 Teams</p>
+
+      <div class="exp-card">
+        <div class="exp-icon-ring">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="exp-card-label">Spaces</div>
+        <div class="exp-card-title">Perfect Venues</div>
+        <div class="exp-card-desc">Handpicked locations that set the stage for unforgettable experiences, near and far.</div>
+        <div class="exp-accent-line"></div>
       </div>
-    </div>
-    <div
-      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
-    >
-      <div>
-        <img
-          class="rounded-lg w-[10vw]"
-          src="{% static 'images/icons/balloon-icon-logo-template-illustration-design-vector.jpg' %}"
-          alt=""
-        />
+
+      <div class="exp-card">
+        <div class="exp-icon-ring">
+          <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        </div>
+        <div class="exp-card-label">Catering</div>
+        <div class="exp-card-title">Delicious Foods</div>
+        <div class="exp-card-desc">World-class chefs craft menus that turn every meal into a centerpiece of the celebration.</div>
+        <div class="exp-accent-line"></div>
       </div>
-      <div class=" ">
-        <h3 class="font-semibold text-2xl">Prefect Venues</h3>
-        <p>The Best & Perfect Venues</p>
+
+      <div class="exp-card">
+        <div class="exp-icon-ring">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="exp-card-label">Support</div>
+        <div class="exp-card-title">24 / 7 Availability</div>
+        <div class="exp-card-desc">Round-the-clock support so you're never alone — from the first call to the final bow.</div>
+        <div class="exp-accent-line"></div>
       </div>
-    </div>
-    <div
-      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
-    >
-      <div>
-        <img
-          class="rounded-lg w-[10vw]"
-          src="{% static 'images/icons/pngtree-food-logo-png-image_5296974.png' %}"
-          alt=""
-        />
+
+      <div class="exp-card">
+        <div class="exp-icon-ring">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="exp-card-label">Security</div>
+        <div class="exp-card-title">Top-notch Safety</div>
+        <div class="exp-card-desc">Rigorous safety protocols and trusted professionals ensure every guest feels secure.</div>
+        <div class="exp-accent-line"></div>
       </div>
-      <div class=" ">
-        <h3 class="font-semibold text-2xl">Delicious Foods</h3>
-        <p>From The Best Chefs</p>
+
+      <div class="exp-card">
+        <div class="exp-icon-ring">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+        </div>
+        <div class="exp-card-label">Ideas</div>
+        <div class="exp-card-title">Brilliant Concepts</div>
+        <div class="exp-card-desc">Creative minds who push every brief beyond the expected, crafting truly original events.</div>
+        <div class="exp-accent-line"></div>
       </div>
-    </div>
-    <div
-      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
-    >
-      <div>
-        <img
-          class="rounded-lg w-[10vw]"
-          src="{% static 'images/icons/safety-shield_24908-38888.jpg' %}"
-          alt=""
-        />
-      </div>
-      <div class=" ">
-        <h3 class="font-semibold text-2xl">24/7 Hours Support</h3>
-        <p>Anytime Anywhere</p>
-      </div>
-    </div>
-    <div
-      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
-    >
-      <div>
-        <img
-          class="rounded-lg w-[10vw]"
-          src="{% static 'images/icons/phone-call-flat-colours_78370-8170.jpg' %}"
-          alt=""
-        />
-      </div>
-      <div class=" ">
-        <h3 class="font-semibold text-2xl">Top-notch Safety</h3>
-        <p>Safer Than Anywhere</p>
-      </div>
-    </div>
-    <div
-      class="flex p-3 items-center gap-5 h-full justify-around bg-orange-400 rounded-xl drop-shadow-lg"
-    >
-      <div>
-        <img
-          class="rounded-lg w-[10vw]"
-          src="{% static 'images/icons/pngtree-idea-vector-icon-with-light-bulb-symbol-png-image_6261889.jpg' %}"
-          alt=""
-        />
-      </div>
-      <div class=" ">
-        <h3 class="font-semibold text-2xl">Brilliant Ideas</h3>
-        <p>NASA's Best Team On Board</p>
-      </div>
+
     </div>
   </div>
 </section>
+
+
+
 {% comment %} About Us {% endcomment %}
-<section>
-  <div>
-    <h1 class="text-center font-bold text-5xl my-20">About Us</h1>
+<section id="about">
+  <style>
+    @keyframes shimmer { 0%{left:-60%} 100%{left:110%} }
+    .au-section { color:#fff; padding:70px 24px; font-family:'Instrument Sans',sans-serif; }
+    .au-label { font-family:'IBM Plex Mono',monospace; font-size:1rem; letter-spacing:0.2em; text-transform:uppercase; color:#f97316; margin-bottom:12px; }
+    .au-heading { font-family:'Fraunces',serif; font-size:clamp(1.8rem,4vw,3.2rem); font-weight:800; letter-spacing:-0.03em; line-height:1.1; margin:0 0 20px; }
+    .au-heading span { color:#f97316; }
+    .au-body { font-size:0.92rem; color:#9ca3af; line-height:1.8; }
+    .au-divider { width:48px; height:3px; background:#f97316; border-radius:2px; margin:20px 0; }
+    .au-section-title { font-family:'Fraunces',serif; font-size:clamp(1.5rem,3vw,2.2rem); font-weight:800; letter-spacing:-0.02em; margin:0; }
+
+    /* Hero grid — 2 cols desktop, 1 col mobile */
+    .au-grid { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; max-width:1400px; margin:0 auto 80px; }
+
+    /* Image */
+    .au-image-wrap { position:relative; border-radius:16px; overflow:hidden; }
+    .au-image-wrap img { width:100%; height:340px; object-fit:cover; display:block; filter:brightness(0.75); border-radius:16px; }
+    .au-image-overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(249,115,22,0.18) 0%,transparent 60%); border-radius:16px; pointer-events:none; }
+    .au-badge { position:absolute; bottom:20px; left:20px; background:rgba(15,15,15,0.9); border:1px solid rgba(249,115,22,0.35); border-radius:10px; padding:12px 18px; backdrop-filter:blur(8px); }
+    .au-badge-num { font-family:'Fraunces',serif; font-size:1.8rem; font-weight:800; color:#f97316; line-height:1; }
+    .au-badge-label { font-size:0.68rem; color:#9ca3af; letter-spacing:0.05em; margin-top:2px; }
+
+    /* Stats */
+    .au-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:32px; }
+    .au-stat { background:#1a1a1a; border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:16px 12px; text-align:center; transition:border-color 0.25s,transform 0.25s; }
+    .au-stat:hover { border-color:rgba(249,115,22,0.4); transform:translateY(-3px); }
+    .au-stat-num { font-family:'Fraunces',serif; font-size:1.7rem; font-weight:800; color:#f97316; line-height:1; }
+    .au-stat-lbl { font-size:0.68rem; color:#6b7280; letter-spacing:0.06em; text-transform:uppercase; margin-top:4px; }
+
+    /* Values — 4 cols → 2 cols → 1 col */
+    .au-values { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; max-width:1400px; margin:0 auto 80px; }
+    .au-card { position:relative; background:#1a1a1a; border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:26px 22px; overflow:hidden; transition:border-color 0.25s,transform 0.25s; }
+    .au-card:hover { border-color:rgba(249,115,22,0.35); transform:translateY(-4px); }
+    .au-card::before { content:''; position:absolute; top:0; left:-60%; width:40%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.03),transparent); }
+    .au-card:hover::before { animation:shimmer 0.7s ease forwards; }
+    .au-card-icon { width:42px; height:42px; background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.2); border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:18px; }
+    .au-card-title { font-weight:600; font-size:0.95rem; color:#fff; margin-bottom:8px; }
+    .au-card-desc { font-size:0.8rem; color:#6b7280; line-height:1.7; }
+
+    /* Team — 4 cols → 2 cols → 1 col */
+    .au-team-header { text-align:center; max-width:500px; margin:0 auto 40px; }
+    .au-team-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; max-width:1400px; margin:0 auto 80px; }
+    .au-team-card { background:#1a1a1a; border:1px solid rgba(255,255,255,0.06); border-radius:14px; overflow:hidden; transition:border-color 0.25s,transform 0.25s; }
+    .au-team-card:hover { border-color:rgba(249,115,22,0.35); transform:translateY(-4px); }
+    .au-team-card img { width:100%; height:180px; object-fit:cover; display:block; }
+    .au-team-info { padding:14px 16px; }
+    .au-team-name { font-weight:600; font-size:0.92rem; color:#fff; }
+    .au-team-role { font-size:0.7rem; color:#f97316; margin-top:3px; font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em; }
+
+    /* CTA */
+    .au-cta { text-align:center; margin-top:60px; }
+    .au-cta-btn { display:inline-block; background:#f97316; color:#fff; font-weight:600; font-size:0.88rem; letter-spacing:0.04em; padding:14px 34px; border-radius:8px; border:none; cursor:pointer; transition:background 0.2s,transform 0.15s; text-decoration:none; }
+    .au-cta-btn:hover { background:#ea6c0a; transform:scale(1.03); }
+
+    /* ── RESPONSIVE ── */
+
+    /* Tablet ≤900px */
+    @media(max-width:900px){
+      .au-grid { grid-template-columns:1fr; gap:32px; }
+      .au-image-wrap img { height:260px; }
+      .au-values { grid-template-columns:repeat(2,1fr); }
+      .au-team-grid { grid-template-columns:repeat(2,1fr); }
+    }
+
+    /* Mobile ≤560px */
+    @media(max-width:560px){
+      .au-section { padding:50px 16px; }
+      .au-grid { gap:24px; margin-bottom:50px; }
+      .au-image-wrap img { height:220px; }
+      .au-badge { bottom:14px; left:14px; padding:10px 14px; }
+      .au-badge-num { font-size:1.3rem; }
+      .au-badge-label { font-size:0.62rem; }
+      .au-stats { gap:8px; }
+      .au-stat { padding:12px 6px; }
+      .au-stat-num { font-size:1.3rem; }
+      .au-stat-lbl { font-size:0.6rem; }
+      .au-values { grid-template-columns:1fr; gap:12px; margin-bottom:50px; }
+      .au-card { padding:20px 18px; }
+      .au-team-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
+      .au-team-card img { height:130px; }
+      .au-team-info { padding:10px 12px; }
+      .au-team-name { font-size:0.85rem; }
+      .au-cta-btn { width:100%; text-align:center; padding:14px; box-sizing:border-box; display:block; }
+      .au-cta { margin-top:40px; }
+    }
+
+    /* Very small ≤360px */
+    @media(max-width:360px){
+      .au-stats { grid-template-columns:1fr; }
+      .au-team-grid { grid-template-columns:1fr; }
+    }
+  </style>
+
+  <div class="au-section">
+
+    <!-- Hero Row -->
+    <div class="au-grid">
+      <div class="au-image-wrap">
+        <img src="{% static 'images/pexels-alex-andrews-271121-1983046.jpg' %}" alt="Our team at work" />
+        <div class="au-image-overlay"></div>
+        <div class="au-badge">
+          <div class="au-badge-num">12+</div>
+          <div class="au-badge-label">Years of Excellence</div>
+        </div>
+      </div>
+      <div>
+        <div class="au-label font-bold">Who We Are</div>
+        <h2 class="au-heading text-black">We Don't Just Plan Events — We <span>Craft Memories</span></h2>
+        <div class="au-divider"></div>
+        <p class="au-body">Good-Day Event Management was born from one belief: every moment deserves to be extraordinary. Since 2012, we've transformed ordinary gatherings into unforgettable experiences — from intimate weddings to large-scale corporate summits.</p>
+        <p class="au-body" style="margin-top:12px;">Our dedicated team brings precision, passion, and creativity to every brief. We don't just execute your vision — we elevate it.</p>
+        <div class="au-stats">
+          <div class="au-stat"><div class="au-stat-num">800+</div><div class="au-stat-lbl">Events</div></div>
+          <div class="au-stat"><div class="au-stat-num">250+</div><div class="au-stat-lbl">Team</div></div>
+          <div class="au-stat"><div class="au-stat-num">98%</div><div class="au-stat-lbl">Happy</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Values -->
+    <div style="max-width:1400px;margin:0 auto 20px;">
+      <div class="au-label" style="text-align:center;">What Drives Us</div>
+      <div class="au-section-title text-black" style="text-align:center;margin-bottom:28px;">Our Core Values</div>
+    </div>
+    <div class="au-values">
+      <div class="au-card">
+        <div class="au-card-icon">✦</div>
+        <div class="au-card-title">Perfection in Every Detail</div>
+        <div class="au-card-desc">From the centerpiece to the lighting angle — nothing escapes our eye. We obsess over details so you don't have to.</div>
+      </div>
+      <div class="au-card">
+        <div class="au-card-icon">◈</div>
+        <div class="au-card-title">Your Vision, Our Blueprint</div>
+        <div class="au-card-desc">We listen first. Every event begins with your story — your ideas shape the experience we design around you.</div>
+      </div>
+      <div class="au-card">
+        <div class="au-card-icon">⬡</div>
+        <div class="au-card-title">Flawless Execution</div>
+        <div class="au-card-desc">Day-of coordination, real-time problem solving, and a calm team that keeps everything running like clockwork.</div>
+      </div>
+      <div class="au-card">
+        <div class="au-card-icon">◉</div>
+        <div class="au-card-title">Creative Excellence</div>
+        <div class="au-card-desc">Award-winning concepts that push boundaries. We bring fresh ideas and bold aesthetics to every single event.</div>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="au-team-header">
+      <div class="au-label" style="text-align:center;">The People Behind the Magic</div>
+      <div class="au-section-title text-black">Meet Our Team</div>
+    </div>
+    <div class="au-team-grid">
+      <div class="au-team-card">
+        <img src="{% static 'images/team/member1.jpg' %}" alt="Rahim Karim" />
+        <div class="au-team-info"><div class="au-team-name">Rahim Karim</div><div class="au-team-role">Founder & CEO</div></div>
+      </div>
+      <div class="au-team-card">
+        <img src="{% static 'images/team/member2.jpg' %}" alt="Sadia Noor" />
+        <div class="au-team-info"><div class="au-team-name">Sadia Noor</div><div class="au-team-role">Head of Design</div></div>
+      </div>
+      <div class="au-team-card">
+        <img src="{% static 'images/team/member3.jpg' %}" alt="Tanvir Hossain" />
+        <div class="au-team-info"><div class="au-team-name">Tanvir Hossain</div><div class="au-team-role">Lead Coordinator</div></div>
+      </div>
+      <div class="au-team-card">
+        <img src="{% static 'images/team/member4.jpg' %}" alt="Fatima Akter" />
+        <div class="au-team-info"><div class="au-team-name">Fatima Akter</div><div class="au-team-role">Client Relations</div></div>
+      </div>
+    </div>
+
+    <div class="au-cta">
+      <p style="color:#6b7280;font-size:0.88rem;margin-bottom:14px;">Ready to create something unforgettable?</p>
+      <a href="#contact-us" class="au-cta-btn">Start Planning Your Event →</a>
+    </div>
+
   </div>
 </section>
-{% comment %} contact {% endcomment %}
-<section>
-  <div>
-    <h1 class="text-center font-bold text-5xl my-20">Contact</h1>
+
+{% comment %} Contact Us {% endcomment %}
+<section id="contact-us">
+  <style>
+    /* ── Contact Section ── */
+    .ct-section {
+      padding: 80px 24px 100px;
+      font-family: 'Instrument Sans', sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle background grid pattern */
+   
+
+    .ct-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .ct-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .ct-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #f97316;
+      margin-bottom: 12px;
+    }
+    .ct-heading {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin: 0 0 16px;
+    }
+    .ct-heading span { color: #f97316; }
+    .ct-subtext {
+      font-size: 0.92rem;
+      color: #6b7280;
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Main layout — form left, info right */
+    .ct-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* ── Form Card ── */
+    .ct-form-card {
+      background: #302D29;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 44px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+
+    .ct-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .ct-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .ct-field.full { grid-column: 1 / -1; }
+    .ct-field label {
+      font-size: 0.75rem;
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+    .ct-field input,
+    .ct-field select,
+    .ct-field textarea {
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: 'Instrument Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .ct-field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+      cursor: pointer;
+    }
+    .ct-field select option { background: #1a1a1a; color: #fff; }
+    .ct-field input::placeholder,
+    .ct-field textarea::placeholder { color: #4b5563; }
+    .ct-field input:focus,
+    .ct-field select:focus,
+    .ct-field textarea:focus {
+      border-color: rgba(249,115,22,0.5);
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.08);
+    }
+    .ct-field textarea { resize: vertical; min-height: 120px; }
+
+    .ct-submit {
+      width: 100%;
+      background: #f97316;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 15px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .ct-submit:hover {
+      background: #ea6c0a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(249,115,22,0.25);
+    }
+    .ct-submit:active { transform: translateY(0); }
+    .ct-submit svg { transition: transform 0.2s; }
+    .ct-submit:hover svg { transform: translateX(4px); }
+
+    /* Success state */
+    .ct-success {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .ct-success-icon {
+      width: 64px; height: 64px;
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+    .ct-success h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 8px;
+    }
+    .ct-success p { color: #6b7280; font-size: 0.88rem; }
+
+    /* ── Info Panel ── */
+    .ct-info { display: flex; flex-direction: column; gap: 20px; }
+
+    /* Quick contact cards */
+    .ct-contact-card {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      transition: border-color 0.25s, transform 0.25s;
+      text-decoration: none;
+    }
+    .ct-contact-card:hover {
+      border-color: rgba(249,115,22,0.35);
+      transform: translateX(4px);
+    }
+    .ct-contact-icon {
+      width: 46px; height: 46px; flex-shrink: 0;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .ct-contact-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .ct-contact-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Hours card */
+    .ct-hours-card {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .ct-hours-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #f97316;
+      margin-bottom: 16px;
+    }
+    .ct-hours-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.83rem;
+    }
+    .ct-hours-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .ct-hours-day { color: #9ca3af; }
+    .ct-hours-time { color: #fff; font-weight: 500; }
+    .ct-hours-time.closed { color: #4b5563; }
+
+    /* Social strip */
+    .ct-social {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ct-social-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #6b7280;
+    }
+    .ct-social-links { display: flex; gap: 10px; }
+    .ct-social-btn {
+      width: 38px; height: 38px;
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none;
+      font-size: 16px;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .ct-social-btn:hover {
+      border-color: rgba(249,115,22,0.4);
+      background: rgba(249,115,22,0.08);
+      transform: translateY(-2px);
+    }
+
+    /* ── Responsive ── */
+    @media(max-width:960px){
+      .ct-grid { grid-template-columns: 1fr; }
+      .ct-info { display: grid; grid-template-columns: 1fr 1fr; }
+      .ct-hours-card { grid-column: 1 / -1; }
+    }
+    @media(max-width:640px){
+      .ct-section { padding: 60px 16px 80px; }
+      .ct-form-card { padding: 28px 20px; }
+      .ct-form-row { grid-template-columns: 1fr; }
+      .ct-info { grid-template-columns: 1fr; }
+      .ct-hours-card { grid-column: auto; }
+      .ct-social { flex-direction: column; gap: 14px; align-items: flex-start; }
+    }
+  </style>
+
+  <div class="ct-section">
+    <div class="ct-inner">
+
+      <!-- Header -->
+      <div class="ct-header">
+        <div class="ct-label">Get In Touch</div>
+        <h2 class="ct-heading text-black">Let's Plan Something <span>Extraordinary</span></h2>
+        <p class="ct-subtext">Tell us about your event and we'll get back to you within 24 hours with a personalized proposal.</p>
+      </div>
+
+      <!-- Grid -->
+      <div class="ct-grid">
+
+        <!-- Form -->
+        <div class="ct-form-card">
+          <form id="ct-form" onsubmit="ctSubmit(event)" novalidate>
+            <div class="ct-form-row">
+              <div class="ct-field">
+                <label for="ct-name">Full Name</label>
+                <input id="ct-name" type="text" placeholder="e.g. Rahim Karim" required />
+              </div>
+              <div class="ct-field">
+                <label for="ct-email">Email Address</label>
+                <input id="ct-email" type="email" placeholder="you@example.com" required />
+              </div>
+              <div class="ct-field">
+                <label for="ct-phone">Phone Number</label>
+                <input id="ct-phone" type="tel" placeholder="+880 1X XX XXX XXX" />
+              </div>
+              <div class="ct-field">
+                <label for="ct-event">Event Type</label>
+                <select id="ct-event">
+                  <option value="" disabled selected>Select event type</option>
+                  <option>Wedding</option>
+                  <option>Corporate Event</option>
+                  <option>Birthday Celebration</option>
+                  <option>Conference / Summit</option>
+                  <option>Product Launch</option>
+                  <option>Social Gathering</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="ct-field">
+                <label for="ct-date">Event Date</label>
+                <input id="ct-date" type="date" />
+              </div>
+              <div class="ct-field">
+                <label for="ct-guests">Expected Guests</label>
+                <select id="ct-guests">
+                  <option value="" disabled selected>Select range</option>
+                  <option>Under 50</option>
+                  <option>50 – 150</option>
+                  <option>150 – 300</option>
+                  <option>300 – 500</option>
+                  <option>500+</option>
+                </select>
+              </div>
+              <div class="ct-field full">
+                <label for="ct-message">Tell Us About Your Vision</label>
+                <textarea id="ct-message" placeholder="Share any details, themes, or special requirements…"></textarea>
+              </div>
+            </div>
+            <button type="submit" class="ct-submit">
+              Send Your Request
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </form>
+          <div class="ct-success" id="ct-success">
+            <div class="ct-success-icon">✓</div>
+            <h3>Message Received!</h3>
+            <p>Our team will reach out within 24 hours with a tailored proposal for your event.</p>
+          </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="ct-info">
+          <a href="tel:+8801700000000" class="ct-contact-card">
+            <div class="ct-contact-icon">📞</div>
+            <div>
+              <div class="ct-contact-label">Call Us</div>
+              <div class="ct-contact-value">+880 1700 000 000</div>
+            </div>
+          </a>
+          <a href="mailto:hello@goodday.events" class="ct-contact-card">
+            <div class="ct-contact-icon">✉️</div>
+            <div>
+              <div class="ct-contact-label">Email Us</div>
+              <div class="ct-contact-value">hello@goodday.events</div>
+            </div>
+          </a>
+          <a href="#" class="ct-contact-card">
+            <div class="ct-contact-icon">📍</div>
+            <div>
+              <div class="ct-contact-label">Visit Us</div>
+              <div class="ct-contact-value">Gulshan-2, Dhaka 1212</div>
+            </div>
+          </a>
+
+          <div class="ct-hours-card">
+            <div class="ct-hours-title">⏱ Office Hours</div>
+            <div class="ct-hours-row">
+              <span class="ct-hours-day">Sunday – Thursday</span>
+              <span class="ct-hours-time">9:00 AM – 7:00 PM</span>
+            </div>
+            <div class="ct-hours-row">
+              <span class="ct-hours-day">Friday</span>
+              <span class="ct-hours-time">10:00 AM – 4:00 PM</span>
+            </div>
+            <div class="ct-hours-row">
+              <span class="ct-hours-day">Saturday</span>
+              <span class="ct-hours-time closed">Closed</span>
+            </div>
+          </div>
+
+          <div class="ct-social">
+            <div class="ct-social-label">Follow Our Journey</div>
+            <div class="ct-social-links">
+              <a href="#" class="ct-social-btn" title="Facebook">𝑓</a>
+              <a href="#" class="ct-social-btn" title="Instagram">📷</a>
+              <a href="#" class="ct-social-btn" title="LinkedIn">in</a>
+              <a href="#" class="ct-social-btn" title="YouTube">▶</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
+
+  <script>
+    async function ctSubmit(e) {
+      e.preventDefault();
+    
+      const btn = document.querySelector('.ct-submit');
+      const name  = document.getElementById('ct-name').value.trim();
+      const email = document.getElementById('ct-email').value.trim();
+    
+      if (!name || !email) {
+        alert('Please enter your name and email.');
+        return;
+      }
+    
+      // Loading state
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
+    
+      const payload = {
+        name,
+        email,
+        phone:      document.getElementById('ct-phone').value,
+        event_type: document.getElementById('ct-event').value,
+        event_date: document.getElementById('ct-date').value,
+        guests:     document.getElementById('ct-guests').value,
+        message:    document.getElementById('ct-message').value,
+      };
+    
+      try {
+        const res = await fetch('/contact/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '',
+          },
+          body: JSON.stringify(payload),
+        });
+    
+        const data = await res.json();
+    
+        if (data.ok) {
+          document.getElementById('ct-form').style.display = 'none';
+          document.getElementById('ct-success').style.display = 'block';
+        } else {
+          alert('Something went wrong: ' + data.error);
+          btn.textContent = 'Send Your Request';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert('Network error. Please try again.');
+        btn.textContent = 'Send Your Request';
+        btn.disabled = false;
+      }
+    }
+  </script>
 </section>
 
 {% endblock home_page %}

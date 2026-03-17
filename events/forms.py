@@ -22,7 +22,7 @@ class StyledFormMixin:
                 })
             elif isinstance(field.widget, forms.TimeInput):
                 field.widget.attrs.update({
-                    'class': self.default_style
+                    'class': f"w-full {self.default_style} bg-white text-white",
                 })
             elif isinstance(field.widget, forms.ClearableFileInput):
                 field.widget.attrs.update({
@@ -62,7 +62,7 @@ class EventModelForm( StyledFormMixin, forms.ModelForm):
             'date': forms.SelectDateWidget, 
             'time': forms.TimeInput(attrs={'type':'time'}),
             'description': forms.Textarea, 
-            'image': forms.ClearableFileInput()
+            'image': forms.FileInput()
             
         }
         

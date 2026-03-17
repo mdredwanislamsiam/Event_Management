@@ -1,45 +1,665 @@
 {% extends "admin/admin_navbar.html" %}
 {% block content %}
-<div class="w-1/2 mx-auto my-8">
-    <h2 class="text-2xl font-bold mb-4">Groups and Permissions</h2>
-    <div class="overflow-x-auto">
-      <table class="table-auto w-full border-collapse border border-gray-300">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="border border-gray-300 px-4 py-2">Group Name</th>
-            <th class="border border-gray-300 px-4 py-2">Permissions</th>
-            <th class="border border-gray-300 px-4 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Example group data -->
-          {% for group in groups  %}
-            <tr class="odd:bg-white even:bg-gray-50">
-                <td class="border border-gray-300 px-4 py-2 font-medium">
-                    {{group.name}}
-                </td>
-                <td class="border border-gray-300 px-4 py-2">
-                  <ul class="list-disc list-inside">
-                      {% for permission in group.permissions.all  %}
-                          <li>{{permission.name}} | {{permission.codename}}</li>
-                      {% empty %}
-                          <span class="italic text-gray-500">No permission assigned</span>
-                      {% endfor %}
-                  </ul>
-                </td>
-                <td class="border border-gray-300 px-4 py-2">
-                  <form action="{% url 'delete_group' user.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class = " my-2 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                    >Delete</button>
-                  </form>
-                </td>
-            </tr>
-          {% endfor %}
+{% load static %}
 
-        </tbody>
-      </table>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
+
+  .page {
+    background: #fff;
+    min-height: 100vh;
+    padding: 40px;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
+  .dash-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(95deg, #754912 20%, #CF7C15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .stat-chip {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.25s;
+  }
+
+  .stat-chip:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(249,115,22,0.12);
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .stat-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .stat-val {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    background: linear-gradient(95deg, #f97316, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .stat-lbl {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 360px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    stroke: #6b7280;
+    fill: none;
+    pointer-events: none;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 11px 14px 11px 40px;
+    color: #fff;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-wrap input:focus {
+    border-color: rgba(249,115,22,0.5);
+  }
+
+  .search-wrap input::placeholder {
+    color: #4b5563;
+  }
+
+  .create-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 14px;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 8px 20px rgba(249,115,22,0.25);
+  }
+
+  .create-btn:hover {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(249,115,22,0.35);
+  }
+
+  .create-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s;
+  }
+
+  .create-btn:hover svg {
+    transform: rotate(12deg) scale(1.1);
+  }
+
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 20px;
+  }
+
+  .group-card {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .group-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(249,115,22,0.14);
+  }
+
+  .card-head {
+    padding: 20px 24px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .card-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(249,115,22,0.14);
+    border: 1px solid rgba(249,115,22,0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-avatar svg {
+    width: 20px;
+    height: 20px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .card-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .card-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-top: 3px;
+  }
+
+  .badge-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    background: rgba(249,115,22,0.15);
+    border: 1px solid rgba(249,115,22,0.3);
+    color: #f97316;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+
+  .card-body {
+    padding: 18px 24px;
+  }
+
+  .perm-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 12px;
+  }
+
+  .perm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .perm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 9px 14px;
+    transition: border-color 0.2s;
+  }
+
+  .perm-item:hover {
+    border-color: rgba(249,115,22,0.25);
+  }
+
+  .perm-name {
+    font-size: 0.83rem;
+    color: #d1d5db;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .perm-code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    background: rgba(249,115,22,0.1);
+    color: #f97316;
+    padding: 3px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+  }
+
+  /* Hidden extra permissions */
+  .perm-extra {
+    display: none;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 7px;
+    /* smooth reveal */
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .perm-extra.open {
+    display: flex;
+    max-height: 2000px;
+  }
+
+  /* View More Button */
+  .view-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 16px;
+    background: rgba(249,115,22,0.07);
+    border: 1px dashed rgba(249,115,22,0.3);
+    border-radius: 10px;
+    color: #f97316;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .view-more-btn:hover {
+    background: rgba(249,115,22,0.14);
+    border-color: rgba(249,115,22,0.5);
+  }
+
+  .view-more-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+  }
+
+  .view-more-btn.expanded svg {
+    transform: rotate(180deg);
+  }
+
+  .empty-perms {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 10px;
+  }
+
+  .empty-perms span {
+    font-size: 0.82rem;
+    color: #4b5563;
+    font-style: italic;
+  }
+
+  .card-foot {
+    padding: 14px 24px 18px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .btn {
+    flex: 1;
+    padding: 11px 16px;
+    border-radius: 12px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .btn-edit {
+    background: rgba(249,115,22,0.12);
+    color: #f97316;
+    border: 1px solid rgba(249,115,22,0.25);
+  }
+
+  .btn-edit:hover {
+    background: #f97316;
+    color: #fff;
+  }
+
+  .btn-del {
+    background: rgba(239,68,68,0.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+
+  .btn-del:hover {
+    background: #dc2626;
+    color: #fff;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    grid-column: 1 / -1;
+  }
+
+  .empty-state-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+
+  .empty-state-icon svg {
+    width: 28px;
+    height: 28px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .empty-state h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+
+  .empty-state p {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+</style>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="container mx-auto mb-10">
+    <span style="color:#e5670d" class="font-mono font-bold text-lg tracking-[0.25em] uppercase">Admin Panel</span>
+    <h1 class="dash-title">Groups &amp; Permissions</h1>
+  </div>
+
+  <!-- STATS -->
+  <div class="container mx-auto mb-6">
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div>
+          <div class="stat-val">{{ groups|length }}</div>
+          <div class="stat-lbl">Total Groups</div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="container mx-auto">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="group-search" placeholder="Search groups..." oninput="filterGroups(this.value)">
+      </div>
+      <a href="{% url 'create_group' %}" class="create-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Create New Group
+      </a>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  {% if messages %}
+    <div class="container mx-auto mb-8">
+      {% for message in messages %}
+        <div style="background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.35);color:#fdba74;padding:16px 24px;border-radius:16px;text-align:center;font-size:1rem;display:flex;align-items:center;gap:10px;justify-content:center;">
+          <span style="font-size:1.3rem;">🔔</span>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- GROUPS GRID -->
+  <div class="container mx-auto">
+    <div class="groups-grid" id="groups-grid">
+
+      {% for group in groups %}
+        {% with perms_list=group.permissions.all perm_count=group.permissions.count %}
+        <div class="group-card" data-name="{{ group.name|lower }}">
+
+          <div class="card-head">
+            <div class="card-title-wrap">
+              <div class="card-avatar">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              </div>
+              <div>
+                <div class="card-name">{{ group.name }}</div>
+                <div class="card-meta">{{ perm_count }} permission{{ perm_count|pluralize }}</div>
+              </div>
+            </div>
+            <span class="badge-count">{{ perm_count }} perm{{ perm_count|pluralize }}</span>
+          </div>
+
+          <div class="card-body">
+            <div class="perm-label">Assigned Permissions</div>
+
+            {% if perms_list %}
+              <div class="perm-list">
+
+                {# First 5 always visible #}
+                {% for permission in perms_list|slice:":5" %}
+                  <div class="perm-item">
+                    <span class="perm-name">{{ permission.name }}</span>
+                    <span class="perm-code">{{ permission.codename }}</span>
+                  </div>
+                {% endfor %}
+
+                {# Hidden extras — only rendered if there are more than 5 #}
+                {% if perm_count > 5 %}
+                  <div class="perm-extra" id="extra-{{ group.id }}">
+                    {% for permission in perms_list|slice:"5:" %}
+                      <div class="perm-item">
+                        <span class="perm-name">{{ permission.name }}</span>
+                        <span class="perm-code">{{ permission.codename }}</span>
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                  <button
+                    class="view-more-btn"
+                    id="btn-{{ group.id }}"
+                    onclick="togglePerms('{{ group.id }}', {{ perm_count|add:'-5' }})"
+                  >
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                    <span id="btn-label-{{ group.id }}">
+                      Show {{ perm_count|add:"-5" }} more permission{{ perm_count|add:"-5"|pluralize }}
+                    </span>
+                  </button>
+                {% endif %}
+
+              </div>
+            {% else %}
+              <div class="empty-perms">
+                <svg style="width:16px;height:16px;stroke:#4b5563;fill:none;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <span>No permissions assigned to this group yet</span>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card-foot">
+            <form action="{% url 'delete_group' group.id %}" method="POST" style="flex:1">
+              {% csrf_token %}
+              <button type="submit"
+                      onclick="return confirm('Delete group \'{{ group.name }}\' permanently?')"
+                      class="btn btn-del" style="width:100%">
+                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endwith %}
+      {% empty %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <h3>No Groups Found</h3>
+          <p>Create your first group to start managing permissions.</p>
+        </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
 </div>
+
+<script>
+  function togglePerms(groupId, extraCount) {
+    const extra = document.getElementById('extra-' + groupId);
+    const btn   = document.getElementById('btn-' + groupId);
+    const label = document.getElementById('btn-label-' + groupId);
+    const isOpen = extra.classList.contains('open');
+
+    if (isOpen) {
+      extra.classList.remove('open');
+      btn.classList.remove('expanded');
+      label.textContent = 'Show ' + extraCount + ' more permission' + (extraCount !== 1 ? 's' : '');
+    } else {
+      extra.classList.add('open');
+      btn.classList.add('expanded');
+      label.textContent = 'Show less';
+    }
+  }
+
+  function filterGroups(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('.group-card').forEach(card => {
+      card.style.display = card.dataset.name.includes(q) ? '' : 'none';
+    });
+  }
+</script>
 
 {% endblock content %}

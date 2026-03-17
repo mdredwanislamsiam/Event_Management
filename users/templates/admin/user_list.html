@@ -1,80 +1,731 @@
 {% extends "admin/admin_navbar.html" %}
-
 {% block content %}
+{% load static %}
 
-<div>
-{% if messages %}
-  {% for message in messages %}
-    <p class="px-2 py-1 text-center mx-6 my-4 bg-green-500">
-      {{ message }}
-    </p>
-  {% endfor %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
 
-{% endif %}
-</div>
+  .page {
+    background: #fff;
+    min-height: 100vh;
+    padding: 40px;
+    font-family: 'Instrument Sans', sans-serif;
+  }
 
-<div class="container mx-auto p-6">
-    <div class="overflow-x-auto">
-      <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-        <thead class="bg-gray-100">
-          <tr>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Number
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Username
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Email
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              User ID
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Current Role
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <!-- Example static data -->
-          {% for user in users %}
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-4 whitespace-nowrap">{{forloop.counter}}</td>
-                <td class="px-4 py-4 whitespace-nowrap">{{user.username}}</td>
-                <td class="px-4 py-4 whitespace-nowrap">{{user.email}}</td>
-                <td class="px-4 py-4 whitespace-nowrap">{{user.id}}</td>
-                <td class="px-4 py-4 whitespace-nowrap">{{user.group_name}}</td>
-                <td class="px-4 py-4 whitespace-nowrap">
-                    <a href="{% url 'assign_role' user.id %}">
-                      <button type="submit" class = " my-2 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                      >Change Role</button>
-                    </a>
-                    <form action="{% url 'delete_participant' user.id %}" method="POST">
-                      {% csrf_token %}
-                      <button type="submit" class = " my-2 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                      >Delete</button>
-                    </form>
-                </td>
-            </tr>
-          
-          {% endfor %}
-        </tbody>
-      </table>
+  .dash-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(95deg, #754912 20%, #CF7C15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  /* ── Stats Row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .stat-chip {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.25s;
+    text-decoration: none;
+  }
+
+  .stat-chip:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(249,115,22,0.12);
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .stat-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .stat-val {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    background: linear-gradient(95deg, #f97316, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .stat-lbl {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  .search-wrap {
+    position: relative;
+    max-width: 320px;
+    flex: 1;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    stroke: #6b7280;
+    fill: none;
+    pointer-events: none;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 14px 10px 38px;
+    color: #fff;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-wrap input:focus {
+    border-color: rgba(249,115,22,0.5);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.08);
+  }
+
+  .search-wrap input::placeholder { color: #4b5563; }
+
+  .filter-select {
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 36px 10px 14px;
+    color: #9ca3af;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.2s;
+  }
+
+  .filter-select:focus { border-color: rgba(249,115,22,0.5); }
+  .filter-select option { background: #1a1a1a; }
+
+  /* ── Table Card ── */
+  .table-card {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    background: rgba(0,0,0,0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  thead th {
+    padding: 14px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  thead th:first-child { padding-left: 24px; }
+  thead th:last-child  { padding-right: 24px; text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.18s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody tr:hover { background: rgba(249,115,22,0.04); }
+
+  tbody td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    color: #d1d5db;
+  }
+
+  tbody td:first-child { padding-left: 24px; }
+  tbody td:last-child  { padding-right: 24px; }
+
+  /* Row number */
+  .row-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: #4b5563;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 3px 8px;
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+  }
+
+  /* Avatar + username cell */
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(249,115,22,0.14);
+    border: 1px solid rgba(249,115,22,0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #f97316;
+    text-transform: uppercase;
+  }
+
+  .user-name {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+
+  .user-id-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: #4b5563;
+    margin-top: 2px;
+  }
+
+  /* Email */
+  .email-text {
+    color: #9ca3af;
+    font-size: 0.85rem;
+  }
+
+  /* Role badge */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .role-badge.has-role {
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.28);
+    color: #f97316;
+  }
+
+  .role-badge.no-role {
+    background: rgba(107,114,128,0.12);
+    border: 1px solid rgba(107,114,128,0.2);
+    color: #6b7280;
+  }
+
+  .role-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .has-role .role-dot { background: #f97316; }
+  .no-role  .role-dot { background: #4b5563; }
+
+  /* Action buttons */
+  .action-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .btn svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  .btn-role {
+    background: rgba(249,115,22,0.12);
+    color: #f97316;
+    border: 1px solid rgba(249,115,22,0.25);
+  }
+
+  .btn-role:hover {
+    background: #f97316;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(249,115,22,0.3);
+  }
+
+  .btn-del {
+    background: rgba(239,68,68,0.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+
+  .btn-del:hover {
+    background: #dc2626;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(220,38,38,0.3);
+  }
+
+  /* Table footer / pagination info */
+  .table-foot {
+    padding: 14px 24px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .table-foot-info {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: #4b5563;
+    text-transform: uppercase;
+  }
+
+  .table-foot-info span {
+    color: #f97316;
+  }
+
+  /* Empty state */
+  .empty-row td {
+    text-align: center;
+    padding: 60px 20px !important;
+  }
+
+  .empty-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .empty-icon {
+    width: 52px;
+    height: 52px;
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: #f97316;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .empty-inner h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #6b7280;
+  }
+
+  .empty-inner p {
+    font-size: 0.8rem;
+    color: #4b5563;
+  }
+
+  /* Message alert */
+  .msg-alert {
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.35);
+    color: #fdba74;
+    padding: 14px 24px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page { padding: 20px 16px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .dash-title { font-size: 2rem; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .search-wrap { max-width: 100%; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="container mx-auto mb-10">
+    <span style="color:#e5670d" class="font-mono font-bold text-lg tracking-[0.25em] uppercase">Admin Panel</span>
+    <h1 class="dash-title">User Management</h1>
+  </div>
+
+  <!-- MESSAGES -->
+  {% if messages %}
+    <div class="container mx-auto">
+      {% for message in messages %}
+        <div class="msg-alert">
+          <span style="font-size:1.2rem">🔔</span>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- STATS -->
+  <div class="container mx-auto mb-6">
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div>
+          <div class="stat-val">{{ users|length }}</div>
+          <div class="stat-lbl">Total Users</div>
+        </div>
+      </div>
+      <div class="stat-chip">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="stat-val" id="stat-assigned">—</div>
+          <div class="stat-lbl">Roles Assigned</div>
+        </div>
+      </div>
+      <div class="stat-chip">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        </div>
+        <div>
+          <div class="stat-val" id="stat-unassigned">—</div>
+          <div class="stat-lbl">No Role Yet</div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- TOOLBAR -->
+  <div class="container mx-auto">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="user-search" placeholder="Search by name or email…" oninput="filterUsers()">
+        </div>
+        <select class="filter-select" id="role-filter" onchange="filterUsers()">
+          <option value="">All Roles</option>
+          <option value="__none__">No Role</option>
+          {% for user in users %}
+            {% if user.group_name %}
+              <option value="{{ user.group_name|lower }}">{{ user.group_name }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="container mx-auto">
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="users-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>User</th>
+              <th>Email</th>
+              <th>User ID</th>
+              <th>Current Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            {% for user in users %}
+              <tr data-name="{{ user.username|lower }}"
+                  data-email="{{ user.email|lower }}"
+                  data-role="{{ user.group_name|lower|default:'__none__' }}">
+
+                <!-- # -->
+                <td><span class="row-num">{{ forloop.counter }}</span></td>
+
+                <!-- User -->
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ user.username|slice:":2" }}</div>
+                    <div>
+                      <div class="user-name">{{ user.username }}</div>
+                      <div class="user-id-sub">ID · {{ user.id }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td><span class="email-text">{{ user.email|default:"—" }}</span></td>
+
+                <!-- User ID -->
+                <td>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:#6b7280;">
+                    #{{ user.id }}
+                  </span>
+                </td>
+
+                <!-- Role -->
+                <td>
+                  {% if user.group_name %}
+                    <span class="role-badge has-role">
+                      <span class="role-dot"></span>
+                      {{ user.group_name }}
+                    </span>
+                  {% else %}
+                    <span class="role-badge no-role">
+                      <span class="role-dot"></span>
+                      Unassigned
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Actions -->
+                <td>
+                  <div class="action-cell">
+                    <a href="{% url 'assign_role' user.id %}" class="btn btn-role">
+                      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Change Role
+                    </a>
+                    <form action="{% url 'delete_participant' user.id %}" method="POST" style="margin:0">
+                      {% csrf_token %}
+                      <button type="submit"
+                              class="btn btn-del"
+                              onclick="return confirm('Delete user {{ user.username }} permanently?')">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+
+              </tr>
+            {% empty %}
+              <tr class="empty-row">
+                <td colspan="6">
+                  <div class="empty-inner">
+                    <div class="empty-icon">
+                      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    </div>
+                    <h3>No Users Found</h3>
+                    <p>There are no registered users yet.</p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer -->
+      <div class="table-foot">
+        <span class="table-foot-info">
+          Showing <span id="visible-count">{{ users|length }}</span> of <span>{{ users|length }}</span> users
+        </span>
+        <span class="table-foot-info" style="color:#4b5563;">
+          User Management · Admin Panel
+        </span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Deduplicate role filter options on load
+  (function dedupeRoles() {
+    const sel = document.getElementById('role-filter');
+    const seen = new Set();
+    Array.from(sel.options).forEach(opt => {
+      const v = opt.value;
+      if (v && v !== '' && seen.has(v)) opt.remove();
+      else seen.add(v);
+    });
+  })();
+
+  // Count assigned / unassigned
+  (function countRoles() {
+    const rows = document.querySelectorAll('#users-tbody tr[data-role]');
+    let assigned = 0, unassigned = 0;
+    rows.forEach(r => {
+      r.dataset.role === '__none__' ? unassigned++ : assigned++;
+    });
+    document.getElementById('stat-assigned').textContent   = assigned;
+    document.getElementById('stat-unassigned').textContent = unassigned;
+  })();
+
+  // Search + filter
+  function filterUsers() {
+    const q    = document.getElementById('user-search').value.toLowerCase();
+    const role = document.getElementById('role-filter').value.toLowerCase();
+    const rows = document.querySelectorAll('#users-tbody tr[data-role]');
+    let visible = 0;
+
+    rows.forEach(row => {
+      const nameMatch  = row.dataset.name.includes(q) || row.dataset.email.includes(q);
+      const roleMatch  = !role || row.dataset.role === role;
+      const show       = nameMatch && roleMatch;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('visible-count').textContent = visible;
+
+    // Show empty state if nothing visible
+    const existing = document.getElementById('no-results-row');
+    if (visible === 0 && !existing) {
+      const tr = document.createElement('tr');
+      tr.id = 'no-results-row';
+      tr.className = 'empty-row';
+      tr.innerHTML = `<td colspan="6">
+        <div class="empty-inner">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          </div>
+          <h3>No results found</h3>
+          <p>Try adjusting your search or filter.</p>
+        </div>
+      </td>`;
+      document.getElementById('users-tbody').appendChild(tr);
+    } else if (visible > 0 && existing) {
+      existing.remove();
+    }
+  }
+</script>
+
 {% endblock content %}

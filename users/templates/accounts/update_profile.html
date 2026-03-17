@@ -1,41 +1,412 @@
-{% extends navbar %} 
+{% extends navbar %}
 {% block content %}
+{% load static %}
 
-<div class="group fixed inset-y-0 left-0 z-0">
-	<div class="w-64 h-full"></div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
 
-	<aside
-		class="absolute left-0 top-64 h-64 w-64 my-auto rounded-2xl bg-orange-800/90 shadow-2xl -transform -translate-x-full group-hover:translate-x-2 transition-transform duration-500 ease-in-out">
-		<div class="p-4">
-			<h2 class="text-xl font-semibold text-white text-center">Menu</h2>
-		</div>
+  .up-page {
+    min-height: 100vh;
+    display: flex;
+    background: #ffffff;
+    font-family: 'Instrument Sans', sans-serif;
+  }
 
-		<nav class="mt-6 text-white">
-			<a href="{% url 'profile' %}" class="block py-2 px-4 hover:bg-gray-500">Profile</a>
-			<a href="{% url 'edit_profile' %}" class="block py-2 px-4 hover:bg-gray-500">Edit Profile</a>
-			<a href="{% url 'password_change' %}" class="block py-2 px-4 hover:bg-gray-500">Change Password</a>
-		</nav>
-	</aside>
-</div>
+  /* ── Sidebar ── */
+  .up-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #302D29;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    padding: 40px 0 32px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
 
-<div class="w-1/2 mx-auto">
-	<h1 class="my-5 text-2xl font-semibold text-center">Update Profile</h1>
-	<div>
-		{% if messages %} {% for message in messages %}
-		<p>{{message}}</p>
-		{% endfor %} {% endif %}
-	</div>
-	<div>
-		<form action="" method="POST" enctype="multipart/form-data">
-			{% csrf_token %} {% comment %} <input type="text" placeholder="Enter username" name="username" />
-			<input type="password" placeholder="Enter Password" name="password" /> {% endcomment %} {{form.as_p}}
-			<button
-				type="submit"
-				class="bg-blue-600 py-1 px-2 mx-auto text-center w-full my-3 rounded focus:bg-green-600 mb-20 text-white">
-				Update Profile
-			</button>
-		</form>
-	</div>
+  .up-sidebar-brand {
+    padding: 0 28px 32px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 28px;
+  }
+  .up-sidebar-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 4px;
+  }
+  .up-sidebar-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.03em;
+  }
+
+  .up-nav-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #4b5563;
+    padding: 0 28px;
+    margin-bottom: 8px;
+  }
+
+  .up-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 28px;
+    font-size: 0.87rem;
+    font-weight: 500;
+    color: #9ca3af;
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+    border-left: 2px solid transparent;
+    margin: 1px 0;
+    position: relative;
+  }
+  .up-nav-link:hover {
+    color: #fff;
+    background: rgba(249,115,22,0.06);
+    border-left-color: rgba(249,115,22,0.4);
+  }
+  .up-nav-link.active {
+    color: #f97316;
+    background: rgba(249,115,22,0.1);
+    border-left-color: #f97316;
+  }
+  .up-nav-link svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── Main Content ── */
+  .up-main {
+    margin: 48px auto; 
+  }
+
+  /* Page header */
+  .up-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 6px;
+  }
+  .up-page-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(95deg, #754912 20%, #CF7C15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 40px;
+    line-height: 1.1;
+  }
+
+  /* Messages */
+  .up-message {
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.3);
+    color: #fdba74;
+    border-radius: 12px;
+    padding: 13px 18px;
+    font-size: 0.87rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  /* ── Form Card ── */
+  .up-card {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    padding: 44px 44px 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+  }
+
+  .up-card::before {
+    content: '';
+    position: absolute;
+    top: -70px; left: -70px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .up-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f97316, #fbbf24, transparent 70%);
+  }
+
+  .up-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 6px;
+  }
+  .up-card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.03em;
+    margin-bottom: 14px;
+  }
+  .up-card-divider {
+    width: 42px;
+    height: 3px;
+    background: #f97316;
+    border-radius: 2px;
+    margin-bottom: 34px;
+  }
+
+  /* Form field overrides for Django's as_p output */
+  #up-form p {
+    margin-bottom: 20px;
+    animation: up-rise 0.45s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  #up-form p:nth-child(1) { animation-delay: 0.05s; }
+  #up-form p:nth-child(2) { animation-delay: 0.10s; }
+  #up-form p:nth-child(3) { animation-delay: 0.15s; }
+  #up-form p:nth-child(4) { animation-delay: 0.20s; }
+  #up-form p:nth-child(5) { animation-delay: 0.25s; }
+  #up-form p:nth-child(6) { animation-delay: 0.30s; }
+
+  @keyframes up-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  #up-form label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  #up-form input[type="text"],
+  #up-form input[type="email"],
+  #up-form input[type="password"],
+  #up-form input[type="number"],
+  #up-form input[type="url"],
+  #up-form input[type="tel"],
+  #up-form select,
+  #up-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    padding: 13px 16px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+  }
+
+  /* File input */
+  #up-form input[type="file"] {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1a1a1a;
+    border: 1px dashed rgba(249,115,22,0.3);
+    border-radius: 12px;
+    padding: 16px;
+    color: #9ca3af;
+    font-size: 0.82rem;
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    cursor: pointer;
+    display: block;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  #up-form input[type="file"]:hover {
+    border-color: rgba(249,115,22,0.6);
+    background: rgba(249,115,22,0.04);
+  }
+
+  #up-form input::placeholder,
+  #up-form textarea::placeholder { color: #374151; }
+
+  #up-form input:focus,
+  #up-form select:focus,
+  #up-form textarea:focus {
+    border-color: rgba(249,115,22,0.55);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.09);
+  }
+
+  #up-form select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+  #up-form select option { background: #1a1a1a; color: #fff; }
+
+  #up-form textarea { resize: vertical; min-height: 100px; }
+
+  #up-form ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+  }
+  #up-form ul.errorlist li {
+    font-size: 0.75rem;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    background: none;
+    padding: 0;
+  }
+  #up-form ul.errorlist li::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    background: rgba(239,68,68,0.2);
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Submit */
+  .up-submit {
+    width: 100%;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 15px 24px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 10px 28px rgba(249,115,22,0.3);
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    animation: up-rise 0.5s 0.38s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .up-submit:hover {
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(249,115,22,0.38);
+  }
+  .up-submit:active { transform: translateY(-1px) scale(0.98); }
+  .up-submit svg { transition: transform 0.2s; flex-shrink: 0; }
+  .up-submit:hover svg { transform: translateX(4px); }
+
+  /* ── Responsive ── */
+  @media (max-width: 860px) {
+    .up-sidebar { display: none; }
+    .up-main { padding: 32px 20px; max-width: 100%; }
+  }
+  @media (max-width: 480px) {
+    .up-card { padding: 28px 20px; }
+    .up-page-title { font-size: 2rem; }
+  }
+</style>
+
+<div class="up-page">
+
+  <!-- Sidebar -->
+  <aside class="up-sidebar">
+    <div class="up-sidebar-brand">
+      <div class="up-sidebar-eyebrow">Good-Day Events</div>
+      <div class="up-sidebar-title">My Account</div>
+    </div>
+
+    <div class="up-nav-label">Account</div>
+
+    <a href="{% url 'profile' %}" class="up-nav-link">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Profile
+    </a>
+    <a href="{% url 'edit_profile' %}" class="up-nav-link active">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Profile
+    </a>
+    <a href="{% url 'password_change' %}" class="up-nav-link">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Change Password
+    </a>
+  </aside>
+
+  <!-- Main -->
+  <main class="up-main">
+
+    <div class="up-eyebrow">Account Settings</div>
+    <h1 class="up-page-title">Update Profile</h1>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="up-message">
+          <span style="font-size:1rem;">🔔</span>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="up-card">
+      <div class="up-card-label">Personal Info</div>
+      <div class="up-card-title">Edit Your Details</div>
+      <div class="up-card-divider"></div>
+
+      <form id="up-form" action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="up-submit">
+          Save Changes
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+  </main>
 </div>
 
 {% endblock content %}

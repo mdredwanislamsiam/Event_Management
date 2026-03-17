@@ -1,18 +1,380 @@
 {% extends "admin/admin_navbar.html" %}
 {% block content %}
-<div class="w-1/2 mx-auto my-8">
-    <div>
-        {% if messages %}
-            {% for message in messages  %}
-                <p>{{message}}</p>
-            {% endfor %}
-        {% endif %}
-    </div>
-    <form action="" method="POST">
-        {% csrf_token %}
-        {{form}}
-        <button type = "submit" class="px-2 py-1 my-3 text-white bg-blue-400 rounded">Assign Role</button>
-    </form>
+{% load static %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
+
+  .ar-page {
+    background: #ffffff;
+    min-height: 100vh;
+    padding: 40px 40px;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
+  /* ── Page Header ── */
+  .ar-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 6px;
+  }
+  .ar-page-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(95deg, #754912 20%, #CF7C15 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 40px;
+  }
+
+  /* ── Messages ── */
+  .ar-message {
+    background: rgba(249, 115, 22, 0.12);
+    border: 1px solid rgba(249, 115, 22, 0.35);
+    color: #fdba74;
+    border-radius: 14px;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  /* ── Card ── */
+  .ar-card {
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    padding: 48px 52px;
+    max-width: 640px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+  }
+
+  /* Glow accent top-left */
+  .ar-card::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(249,115,22,0.14) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Orange top border */
+  .ar-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f97316, #fbbf24, transparent 70%);
+  }
+
+  .ar-card-header {
+    margin-bottom: 36px;
+    position: relative;
+  }
+  .ar-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 8px;
+  }
+  .ar-card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  .ar-divider {
+    width: 42px;
+    height: 3px;
+    background: #f97316;
+    border-radius: 2px;
+    margin-top: 14px;
+  }
+
+  /* ── Form Fields ── */
+  .ar-field {
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .ar-field label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  /* Target all form inputs, selects, textareas inside the card */
+  .ar-card input,
+  .ar-card select,
+  .ar-card textarea {
+    background: #1a1a1a !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    padding: 13px 16px !important;
+    color: #fff !important;
+    font-size: 0.9rem !important;
+    font-family: 'Instrument Sans', sans-serif !important;
+    outline: none !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  .ar-card select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    padding-right: 40px !important;
+    cursor: pointer !important;
+  }
+
+  .ar-card select option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+
+  .ar-card input::placeholder,
+  .ar-card textarea::placeholder {
+    color: #4b5563 !important;
+  }
+
+  .ar-card input:focus,
+  .ar-card select:focus,
+  .ar-card textarea:focus {
+    border-color: rgba(249,115,22,0.55) !important;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.1) !important;
+  }
+
+  /* Style Django's default form output */
+  .ar-card .helptext {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 4px;
+    display: block;
+  }
+
+  .ar-card ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+  }
+
+  .ar-card ul.errorlist li {
+    font-size: 0.78rem;
+    color: #f87171;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ar-card ul.errorlist li::before {
+    content: '⚠';
+    font-size: 0.7rem;
+  }
+
+  /* Override Django's default <p> or <tr> form rendering */
+  .ar-card p {
+    color: #9ca3af;
+    margin-bottom: 20px;
+  }
+
+  .ar-card p label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* The form wrapper that wraps Django's auto-rendered form */
+  .ar-form-body {
+    position: relative;
+  }
+
+  /* ── Submit Button ── */
+  .ar-submit-wrap {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ar-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 15px 36px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(249,115,22,0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ar-submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+    pointer-events: none;
+  }
+
+  .ar-submit-btn:hover {
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(249,115,22,0.4);
+  }
+
+  .ar-submit-btn:active {
+    transform: translateY(-1px) scale(0.98);
+  }
+
+  .ar-submit-btn svg {
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .ar-submit-btn:hover svg {
+    transform: translateX(4px);
+  }
+
+  /* ── Info badge (role hint) ── */
+  .ar-role-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(249,115,22,0.07);
+    border: 1px solid rgba(249,115,22,0.18);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 28px;
+  }
+  .ar-role-hint-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(249,115,22,0.15);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ar-role-hint-text {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    line-height: 1.65;
+  }
+  .ar-role-hint-text strong {
+    color: #f97316;
+    font-weight: 600;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .ar-page { padding: 24px 16px; }
+    .ar-card { padding: 32px 24px; }
+    .ar-page-title { font-size: 2rem; }
+    .ar-submit-wrap { flex-direction: column; align-items: stretch; }
+    .ar-submit-btn { width: 100%; justify-content: center; }
+  }
+</style>
+
+<div class="ar-page">
+
+  <!-- Page Header -->
+  <div class="max-w-7xl mx-auto mb-10">
+    <div class="ar-eyebrow">Admin Panel</div>
+    <h1 class="ar-page-title">Assign Role</h1>
   </div>
+
+  <!-- Messages -->
+  {% if messages %}
+    <div class="max-w-7xl mx-auto">
+      {% for message in messages %}
+        <div class="ar-message">
+          <span style="font-size:1.1rem;">🔔</span>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Form Card -->
+  <div class="max-w-7xl mx-auto flex justify-center items-center">
+    <div class="ar-card">
+
+      <!-- Card Header -->
+      <div class="ar-card-header">
+        <div class="ar-card-label">Permissions</div>
+        <div class="ar-card-title">Assign a Role to User</div>
+        <div class="ar-divider"></div>
+      </div>
+
+      <!-- Role hint -->
+      <div class="ar-role-hint">
+        <div class="ar-role-hint-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="ar-role-hint-text">
+          Roles control what each user can access within the platform. <strong>Admins</strong> have full access. <strong>Coordinators</strong> manage events. <strong>Viewers</strong> have read-only access. Assign carefully.
+        </div>
+      </div>
+
+      <!-- Django Form -->
+      <form action="" method="POST" class="ar-form-body">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="ar-submit-wrap">
+          <button type="submit" class="ar-submit-btn">
+            Assign Role
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>
 
 {% endblock content %}

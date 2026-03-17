@@ -283,19 +283,39 @@ class CreateEventView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
     def form_valid(self, form):
         category_form = CategoryModelForm(self.request.POST)
+
+        # Validate category form
+        if category_form.is_valid():
+            category_name = category_form.cleaned_data.get('category_name')
+            category_description = category_form.cleaned_data.get(
+                'category_description')
+        else:
+            category_name = None
+            category_description = None
+
         selected_cat = self.request.POST.get('category_select')
-        if not category_form.is_valid():
+
+        # If no category selected and no new category entered, show error
+        if not selected_cat and not category_name:
+            messages.error(
+                self.request, "Please select a category or fill the new category form.")
             return self.form_invalid(form)
-        category_name = category_form.cleaned_data.get('category_name')
-        category_description = category_form.cleaned_data.get(
-            'category_description')
+
+        # Use new category if entered
         if category_name:
             category, created = Category.objects.get_or_create(
                 category_name=category_name)
             category.category_description = category_description
             category.save()
         else:
-            category = Category.objects.get(id=selected_cat)
+            # Make sure selected_cat is valid
+            try:
+                category = Category.objects.get(id=int(selected_cat))
+            except (ValueError, Category.DoesNotExist):
+                messages.error(self.request, "Please select a valid category.")
+                return self.form_invalid(form)
+
+        # Save event
         event = form.save(commit=False)
         event.category = category
         event.save()
@@ -315,38 +335,13 @@ class UpdateEventView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event = self.object
-        context['category_form'] = CategoryModelForm()
-        context['categories'] = Category.objects.all()
-        context['category_name'] = event.category.category_name
         context['navbar'] = navbar_test(self.request.user)
         return context
 
     def form_valid(self, form):
-        event = form.instance
-        category_form = CategoryModelForm(
-            self.request.POST, instance=event.category)
-        selected_cat = self.request.POST.get('category_select')
-
-        if not category_form.is_valid():
-            return self.form_invalid(form)
-
-        category_name = category_form.cleaned_data.get('category_name')
-        category_description = category_form.cleaned_data.get(
-            'category_description')
-        if category_name:
-            category, created = Category.objects.get_or_create(
-                category_name=category_name)
-            category.category_description = category_description
-            category.save()
-        else:
-            category = Category.objects.get(id=selected_cat)
-        event = form.save(commit=False)
-        event.category = category
-        event.save()
+        event = form.save()
         messages.success(self.request, "Event Updated Successfully")
         return redirect('update_event', id=event.id)
-
 
 class DeleteEventView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     permission_required = 'events.delete_event'

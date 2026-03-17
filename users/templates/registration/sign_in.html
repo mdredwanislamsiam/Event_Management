@@ -1,22 +1,315 @@
 {% extends "navbar.html" %}
-
 {% block sign_in_form %}
-<section class="w-1/2 mx-auto">
-    <h1 class="my-5 text-2xl font-semibold text-center" >Log In</h1>
-    <div>
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{message}}</p>
-            {% endfor %}
-        {% endif %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
+
+  .si-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 16px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
+  .si-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    padding: 48px 44px 44px;
+    overflow: hidden;
+    animation: si-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes si-rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+ 
+
+  .si-header { text-align: center; margin-bottom: 36px; }
+
+  .si-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 12px;
+  }
+
+  .si-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin: 0 0 10px;
+  }
+  .si-title span {
+    background: linear-gradient(95deg, #f97316 20%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .si-subtitle {
+    font-size: 0.83rem;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  /* Messages */
+  .si-messages { margin-bottom: 20px; }
+  .si-alert {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #fca5a5;
+    margin-bottom: 8px;
+  }
+  .si-alert.info {
+    background: rgba(249,115,22,0.1);
+    border-color: rgba(249,115,22,0.25);
+    color: #fdba74;
+  }
+
+  /* Django form override */
+  #signin-form p {
+    margin-bottom: 18px;
+    animation: si-rise 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  #signin-form p:nth-child(1) { animation-delay: 0.08s; }
+  #signin-form p:nth-child(2) { animation-delay: 0.15s; }
+  #signin-form p:nth-child(3) { animation-delay: 0.22s; }
+
+  #signin-form label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    display: block;
+    margin-bottom: 7px;
+  }
+
+  #signin-form input[type="text"],
+  #signin-form input[type="email"],
+  #signin-form input[type="password"] {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 13px 16px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+  }
+  #signin-form input::placeholder { color: #374151; }
+  #signin-form input:focus {
+    border-color: rgba(249,115,22,0.55);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.09);
+  }
+
+  #signin-form ul {
+    list-style: none;
+    padding: 0; margin: 6px 0 0;
+  }
+  #signin-form ul li {
+    font-size: 0.75rem;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    background: none; padding: 0;
+  }
+  #signin-form ul li::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    background: rgba(239,68,68,0.2);
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+ 
+  .si-forgot {
+    font-size: 0.82rem;
+    color: #f97316;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .si-forgot:hover { color: #fbbf24; }
+
+  /* Submit */
+  .si-submit {
+    width: 100%;
+    background: #f97316;
+    color: #fff;
+    font-family: 'Instrument Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    animation: si-rise 0.5s 0.32s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .si-submit:hover {
+    background: #ea6c0a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(249,115,22,0.28);
+  }
+  .si-submit:active { transform: translateY(0); }
+  .si-submit svg { transition: transform 0.2s; }
+  .si-submit:hover svg { transform: translateX(4px); }
+
+  /* Divider */
+  .si-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .si-divider::before,
+  .si-divider::after {
+    content: ''; flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+  .si-divider span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: #4b5563;
+    text-transform: uppercase;
+  }
+
+  /* Footer */
+  .si-footer {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6b7280;
+    animation: si-rise 0.5s 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .si-footer a {
+    color: #f97316;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .si-footer a:hover { color: #fbbf24; }
+
+  /* Trusted badge strip */
+  .si-trust {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    animation: si-rise 0.5s 0.48s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .si-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    color: #4b5563;
+    text-transform: uppercase;
+  }
+  .si-trust-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(249,115,22,0.4);
+  }
+
+  @media (max-width: 560px) {
+    .si-card { padding: 36px 22px 32px; border-radius: 18px; }
+    .si-title { font-size: 1.8rem; }
+  }
+</style>
+
+<div class="si-page">
+
+  <div class="si-card">
+
+   
+    <div class="si-header">
+      <h1 class="si-title">Sign In to <span>Good-Day</span></h1>
+      <p class="si-subtitle">Your next extraordinary event is one login away.</p>
     </div>
-    <div>
-        <form action="" method="POST">
-            {% csrf_token %}
-            {{form.as_p}}
-            <button type = "submit" class="bg-blue-600 py-1 px-2 mx-auto text-center w-full my-1 rounded focus:bg-green-600 mb-2 text-white" >Log In</button>
-        </form>
-        <p class = "mb-20"><a href="{% url 'password_reset' %} " >Forget Password ?</a></p>
+
+    {% if messages %}
+      <div class="si-messages">
+        {% for message in messages %}
+          <div class="si-alert info">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form id="signin-form" action="" method="POST" novalidate>
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <div class="my-2 px-2">
+        <a href="{% url 'password_reset' %}" class="si-forgot">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="si-submit">
+        Sign In
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </form>
+
+    <div class="si-divider"><span>new here?</span></div>
+
+    <div class="si-footer">
+      Don't have an account? <a href="{% url 'sign_up' %}">Create one free →</a>
     </div>
-</section>
+
+    <div class="si-trust">
+      <div class="si-trust-item"><div class="si-trust-dot"></div> Secure Login</div>
+      <div class="si-trust-item"><div class="si-trust-dot"></div> 800+ Events</div>
+      <div class="si-trust-item"><div class="si-trust-dot"></div> 98% Satisfaction</div>
+    </div>
+
+  </div>
+</div>
+
 {% endblock sign_in_form %}

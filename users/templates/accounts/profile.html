@@ -1,90 +1,575 @@
 {% extends navbar %}
-{% block title %}Profile{% endblock title %}Profile
+{% block title %}Profile{% endblock title %}
 
 {% load custom_filters %}
 {% block profile_block %}
-  <div class="bg-gray-100">
-    <div class="flex min-h-screen">
-      
-      <div class="group fixed inset-y-0 left-0 z-0">
-       
-        <div class="w-64 h-full"></div>
 
-        <aside
-          class="absolute left-0 top-72 h-64 w-64 my-auto rounded-2xl bg-orange-800/90 shadow-2xl
-                -transform -translate-x-full
-                group-hover:translate-x-2
-                transition-transform duration-500 ease-in-out"
-        >
-          <div class="p-4">
-            <h2 class="text-xl font-semibold text-white text-center">Menu</h2>
-          </div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap');
 
-          <nav class="mt-6 text-white">
-            <a href="{% url 'profile' %}" class="block py-2 px-4 hover:bg-gray-500">Profile</a>
-            <a href="{% url 'edit_profile' %}" class="block py-2 px-4 hover:bg-gray-500">Edit Profile</a>
-            <a href="{% url 'password_change' %}" class="block py-2 px-4 hover:bg-gray-500">Change Password</a>
-          </nav>
-        </aside>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --clr-black:   #0d0d0d;
+    --clr-dark:    #111111;
+    --clr-surface: #1a1a1a;
+    --clr-orange:  #f97316;
+    --clr-gold:    #fbbf24;
+    --clr-dim:     #6b7280;
+    --clr-muted:   #9ca3af;
+    --font-display:'Fraunces', serif;
+    --font-mono:   'IBM Plex Mono', monospace;
+    --font-body:   'Instrument Sans', sans-serif;
+    --radius:      16px;
+  }
+
+  .pf-page {
+    font-family: var(--font-body);
+    background: #ffff;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* ════════ HERO BANNER ════════ */
+  .pf-hero {
+    position: relative;
+    height: 220px;
+    background: var(--clr-black);
+    overflow: hidden;
+  }
+  .pf-hero-pattern {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(249,115,22,0.18) 0%, transparent 50%),
+      radial-gradient(circle at 80% 30%, rgba(251,191,36,0.1) 0%, transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(249,115,22,0.08) 0%, transparent 40%);
+  }
+  /* subtle grid texture */
+  .pf-hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .pf-hero-accent {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--clr-orange), var(--clr-gold), transparent 70%);
+  }
+  .pf-hero-label {
+    position: absolute; top: 28px; left: 36px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--clr-orange);
+  }
+
+  /* ════════ AVATAR ZONE ════════ */
+  .pf-avatar-zone {
+    position: relative;
+    max-width: 1100px;
+    margin: 15px auto;
+    padding: 0 32px;
+  }
+  .pf-avatar-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    transform: translateY(-56px);
+    margin-bottom: -36px;
+  }
+  .pf-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .pf-avatar {
+    width: 112px; height: 112px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #f5f5f4;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    display: block;
+  }
+  .pf-avatar-ring {
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(249,115,22,0.4);
+    pointer-events: none;
+  }
+  .pf-avatar-online {
+    position: absolute; bottom: 6px; right: 6px;
+    width: 16px; height: 16px;
+    background: #22c55e;
+    border-radius: 50%;
+    border: 3px solid #f5f5f4;
+  }
+
+  .pf-avatar-info {
+    padding-bottom: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+  .pf-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 900;
+    color: var(--clr-black);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pf-designation {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--clr-orange);
+    margin-top: 4px;
+  }
+
+  .pf-header-actions {
+    display: flex; gap: 8px; padding-bottom: 8px; flex-shrink: 0;
+  }
+  .pf-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .pf-action-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .pf-btn-primary { background: var(--clr-orange); color: #fff; }
+  .pf-btn-primary:hover { background: #ea6c0a; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249,115,22,0.3); }
+  .pf-btn-ghost { background: var(--clr-black); color: #fff; border: 1px solid rgba(255,255,255,0.08); }
+  .pf-btn-ghost:hover { background: #1f1f1f; transform: translateY(-1px); }
+
+  /* ════════ MAIN LAYOUT ════════ */
+  .pf-layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ════════ SHARED CARD ════════ */
+  .pf-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .pf-card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .pf-card-icon {
+    width: 32px; height: 32px;
+    background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .pf-card-icon svg { width: 14px; height: 14px; stroke: var(--clr-orange); fill: none; stroke-width: 2; }
+  .pf-card-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--clr-dim); }
+  .pf-card-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 800; color: var(--clr-black); letter-spacing: -0.02em; }
+  .pf-card-body { padding: 20px; }
+
+  /* ════════ LEFT SIDEBAR ════════ */
+
+  /* Quick stats */
+  .pf-stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: rgba(0,0,0,0.06);
+  }
+  .pf-stat-cell {
+    background: #fff; padding: 16px; text-align: center;
+    transition: background 0.2s;
+  }
+  .pf-stat-cell:hover { background: #fafafa; }
+  .pf-stat-num {
+    font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; line-height: 1;
+    background: linear-gradient(95deg, var(--clr-orange), var(--clr-gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .pf-stat-lbl {
+    font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--clr-dim); margin-top: 3px;
+  }
+
+  /* Info rows */
+  .pf-info-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .pf-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .pf-info-icon {
+    width: 30px; height: 30px; flex-shrink: 0;
+    background: var(--clr-black); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .pf-info-icon svg { width: 12px; height: 12px; stroke: var(--clr-orange); fill: none; stroke-width: 2; }
+  .pf-info-key {
+    font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--clr-dim); margin-bottom: 2px;
+  }
+  .pf-info-val {
+    font-size: 0.82rem; font-weight: 600; color: var(--clr-black);
+    word-break: break-word;
+  }
+
+  /* Quick nav */
+  .pf-nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; border-radius: 10px;
+    text-decoration: none; font-size: 0.82rem; font-weight: 600; color: #374151;
+    transition: background 0.15s, color 0.15s;
+    margin-bottom: 4px;
+  }
+  .pf-nav-link:last-child { margin-bottom: 0; }
+  .pf-nav-link svg { width: 14px; height: 14px; stroke: var(--clr-dim); fill: none; stroke-width: 2; flex-shrink: 0; transition: stroke 0.15s; }
+  .pf-nav-link:hover { background: rgba(249,115,22,0.08); color: var(--clr-orange); }
+  .pf-nav-link:hover svg { stroke: var(--clr-orange); }
+  .pf-nav-arrow { margin-left: auto; width: 12px; height: 12px; stroke: #d1d5db; fill: none; stroke-width: 2; }
+
+  /* ════════ RIGHT COLUMN ════════ */
+
+  /* Bio */
+  .pf-bio-text {
+    font-size: 0.88rem; color: #374151; line-height: 1.85;
+  }
+  .pf-bio-empty {
+    font-size: 0.82rem; color: var(--clr-dim); font-style: italic;
+    padding: 12px 0;
+  }
+
+  /* Account info rows */
+  .pf-account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pf-account-item {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 10px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .pf-account-item:hover { border-color: rgba(249,115,22,0.25); transform: translateY(-2px); }
+  .pf-account-item-icon {
+    width: 32px; height: 32px; flex-shrink: 0;
+    background: var(--clr-black); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pf-account-item-icon svg { width: 13px; height: 13px; stroke: var(--clr-orange); fill: none; stroke-width: 2; }
+  .pf-account-item-label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--clr-dim); margin-bottom: 3px; }
+  .pf-account-item-val { font-size: 0.82rem; font-weight: 600; color: var(--clr-black); }
+
+  /* Activity / Events attended */
+  .pf-events-list { display: flex; flex-direction: column; gap: 8px; }
+  .pf-event-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; background: #f9fafb; border: 1px solid #e5e7eb;
+    border-radius: 10px; text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .pf-event-row:hover { border-color: rgba(249,115,22,0.3); }
+  .pf-event-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--clr-orange);
+  }
+  .pf-event-name { font-size: 0.82rem; font-weight: 600; color: var(--clr-black); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pf-event-date { font-family: var(--font-mono); font-size: 0.6rem; color: var(--clr-dim); letter-spacing: 0.04em; flex-shrink: 0; }
+  .pf-events-empty { text-align: center; padding: 24px; color: var(--clr-dim); font-size: 0.8rem; }
+  .pf-events-empty svg { width: 28px; height: 28px; stroke: #d1d5db; fill: none; stroke-width: 1.5; display: block; margin: 0 auto 8px; }
+
+  /* ════════ RESPONSIVE ════════ */
+  @media (max-width: 860px) {
+    .pf-layout { grid-template-columns: 1fr; }
+    .pf-account-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .pf-layout { padding: 0 16px; }
+    .pf-avatar-zone { padding: 0 16px; }
+    .pf-avatar-row { gap: 14px; transform: translateY(-44px); margin-bottom: -28px; }
+    .pf-avatar { width: 88px; height: 88px; }
+    .pf-name { font-size: 1.2rem; }
+    .pf-header-actions { display: none; }
+    .pf-account-grid { grid-template-columns: 1fr; }
+    .pf-hero { height: 160px; }
+  }
+</style>
+
+<div class="pf-page">
+
+  <!-- ══ HERO BANNER ══ -->
+  <div class="pf-hero">
+    <div class="pf-hero-pattern"></div>
+    <div class="pf-hero-grid"></div>
+    <div class="pf-hero-accent"></div>
+    <div class="pf-hero-label">Good-Day Events — Member Profile</div>
+  </div>
+
+  <!-- ══ AVATAR ROW ══ -->
+  <div class="pf-avatar-zone ">
+    <div class="pf-avatar-row">
+      <div class="pf-avatar-wrap">
+        <img
+          src="{% if profile_image %}{{ profile_image.url }}{% else %}/media/no_image.jpg{% endif %}"
+          alt="{{ name }}"
+          class="pf-avatar"
+        />
+        <div class="pf-avatar-ring"></div>
+        <div class="pf-avatar-online"></div>
       </div>
-
-
-      <!-- Main Content -->
-      <main class="flex-1 p-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">User Profile</h1>
-
-        <div class="bg-white shadow-md rounded-lg p-10">
-          <div class="grid grid-cols-1 md:grid-cols-2 my-6">
-            <div class=" my-auto">
-              <h2 class="text-4xl font-semibold text-gray-800">{{name}}</h2>
-              <p class="text-gray-600 text-2xl">{{designation}}</p>
-            </div>
-            <img
-              src="{% if profile_image %}{{ profile_image.url }}{% else %}/media/no_image.jpg{% endif %}"
-              alt="User Avatar"
-              class="w-40 h-40 rounded-full object-cover my-3 mx-10"
-            />
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-700 mb-2">
-                Personal Information
-              </h3>
-              <p class="text-gray-600">
-                <span class="font-medium">Email:</span> {{email}}
-              </p>
-              <p class="text-gray-600">
-                <span class="font-medium">Username:</span> {{username}}
-              </p>
-              <p class="text-gray-600">
-                <span class="font-medium">Location:</span> {{address}}
-              </p>
-              <p class="text-gray-600">
-                <span class="font-medium">Phone Number:</span> {{phone_number}}
-              </p>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-700 mb-2">
-                Account Information
-              </h3>
-              <p class="text-gray-600">
-                <span class="font-medium">Member Since:</span> {{member_since|date:'F j, Y'}}
-              </p>
-              <p class="text-gray-600">
-                <span class="font-medium">Last Login:</span> {{last_login|humanized_date}}
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-2">Bio</h3>
-            <p class="text-gray-600">
-              {{bio}}
-            </p>
-          </div>
-        </div>
-      </main>
+      <div class="pf-avatar-info ">
+        <div class="pf-name ">{{ name }}</div>
+        <div class="pf-designation">{{ designation|default:"Member" }}</div>
+      </div>
+      <div class="pf-header-actions">
+        <a href="{% url 'edit_profile' %}" class="pf-action-btn pf-btn-primary">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </a>
+        <a href="{% url 'password_change' %}" class="pf-action-btn pf-btn-ghost">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Password
+        </a>
+      </div>
     </div>
   </div>
+
+  <!-- ══ MAIN LAYOUT ══ -->
+  <div class="pf-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div>
+
+      <!-- Stats -->
+      <div class="pf-card" style="overflow:hidden;">
+        <div class="pf-stats-grid">
+          <div class="pf-stat-cell">
+            <div class="pf-stat-num">{{ registered_events|default:"0" }}</div>
+            <div class="pf-stat-lbl">Events</div>
+          </div>
+          <div class="pf-stat-cell">
+            <div class="pf-stat-num">{{ member_since|date:"Y" }}</div>
+            <div class="pf-stat-lbl">Joined</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="pf-card">
+        <div class="pf-card-header">
+          <div class="pf-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div class="pf-card-label">Contact</div>
+            <div class="pf-card-title">Personal Info</div>
+          </div>
+        </div>
+        <div class="pf-card-body">
+
+          <div class="pf-info-row">
+            <div class="pf-info-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="pf-info-key">Email</div>
+              <div class="pf-info-val">{{ email }}</div>
+            </div>
+          </div>
+
+          <div class="pf-info-row">
+            <div class="pf-info-icon">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+              <div class="pf-info-key">Username</div>
+              <div class="pf-info-val">@{{ username }}</div>
+            </div>
+          </div>
+
+          <div class="pf-info-row">
+            <div class="pf-info-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="pf-info-key">Location</div>
+              <div class="pf-info-val">{{ address|default:"Not set" }}</div>
+            </div>
+          </div>
+
+          <div class="pf-info-row">
+            <div class="pf-info-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+            </div>
+            <div>
+              <div class="pf-info-key">Phone</div>
+              <div class="pf-info-val">{{ phone_number|default:"Not set" }}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quick Navigation -->
+      <div class="pf-card">
+        <div class="pf-card-header">
+          <div class="pf-card-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+          </div>
+          <div>
+            <div class="pf-card-label">Navigation</div>
+            <div class="pf-card-title">Quick Links</div>
+          </div>
+        </div>
+        <div class="pf-card-body" style="padding: 12px;">
+          <a href="{% url 'profile' %}" class="pf-nav-link">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            View Profile
+            <svg class="pf-nav-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a href="{% url 'edit_profile' %}" class="pf-nav-link">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Profile
+            <svg class="pf-nav-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a href="{% url 'password_change' %}" class="pf-nav-link">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Change Password
+            <svg class="pf-nav-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a href="{% url 'events' %}" class="pf-nav-link">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Browse Events
+            <svg class="pf-nav-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+
+      <!-- Bio -->
+      <div class="pf-card">
+        <div class="pf-card-header">
+          <div class="pf-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div>
+            <div class="pf-card-label">About</div>
+            <div class="pf-card-title">Bio</div>
+          </div>
+        </div>
+        <div class="pf-card-body">
+          {% if bio %}
+            <p class="pf-bio-text">{{ bio }}</p>
+          {% else %}
+            <p class="pf-bio-empty">No bio added yet. <a href="{% url 'edit_profile' %}" style="color:var(--clr-orange);text-decoration:none;">Add one →</a></p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Account Information -->
+      <div class="pf-card">
+        <div class="pf-card-header">
+          <div class="pf-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div class="pf-card-label">Details</div>
+            <div class="pf-card-title">Account Information</div>
+          </div>
+        </div>
+        <div class="pf-card-body">
+          <div class="pf-account-grid">
+            <div class="pf-account-item">
+              <div class="pf-account-item-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div>
+                <div class="pf-account-item-label">Member Since</div>
+                <div class="pf-account-item-val">{{ member_since|date:'F j, Y' }}</div>
+              </div>
+            </div>
+            <div class="pf-account-item">
+              <div class="pf-account-item-icon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div>
+                <div class="pf-account-item-label">Last Login</div>
+                <div class="pf-account-item-val">{{ last_login|humanized_date }}</div>
+              </div>
+            </div>
+            <div class="pf-account-item">
+              <div class="pf-account-item-icon">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div class="pf-account-item-label">Username</div>
+                <div class="pf-account-item-val">@{{ username }}</div>
+              </div>
+            </div>
+            <div class="pf-account-item">
+              <div class="pf-account-item-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <div class="pf-account-item-label">Account Status</div>
+                <div class="pf-account-item-val" style="color:#22c55e;">Active</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registered Events -->
+      <div class="pf-card">
+        <div class="pf-card-header" style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="pf-card-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+              <div class="pf-card-label">Activity</div>
+              <div class="pf-card-title">Registered Events</div>
+            </div>
+          </div>
+          {% if registered_events_list %}
+          <span style="background:var(--clr-black);color:var(--clr-orange);font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.06em;padding:4px 10px;border-radius:20px;border:1px solid rgba(249,115,22,0.25);">
+            {{ registered_events_list|length }} events
+          </span>
+          {% endif %}
+        </div>
+        <div class="pf-card-body">
+          {% if registered_events_list %}
+            <div class="pf-events-list">
+              {% for ev in registered_events_list %}
+              <a href="{% url 'event_detail' ev.id %}" class="pf-event-row">
+                <div class="pf-event-dot"></div>
+                <div class="pf-event-name">{{ ev.name }}</div>
+                <div class="pf-event-date">{{ ev.date }}</div>
+                <svg style="width:12px;height:12px;stroke:#d1d5db;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="pf-events-empty">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              No events registered yet. <a href="{% url 'events' %}" style="color:var(--clr-orange);text-decoration:none;">Browse events →</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
 {% endblock profile_block %}

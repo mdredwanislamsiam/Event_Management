@@ -1,39 +1,396 @@
 {% extends "navbar.html" %}
 {% block sign_up_form %}
-<div class = "w-1/2 mx-auto">
-    <h1 class="my-5 text-2xl font-semibold text-center">Sign-UP</h1>
-    <div>
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{message}}</p>
-            {% endfor %}
-        {% endif %}
+{% load static %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
+
+  .su-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 16px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
+
+  /* Card */
+  .su-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    background: #302D29;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    padding: 48px 44px 44px;
+    overflow: hidden;
+    animation: su-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes su-rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Header */
+  .su-header { text-align: center; margin-bottom: 36px; }
+
+  .su-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #f97316;
+    margin-bottom: 12px;
+  }
+
+  .su-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin: 0 0 10px;
+  }
+  .su-title span {
+    background: linear-gradient(95deg, #f97316 20%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .su-subtitle {
+    font-size: 0.83rem;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  /* Messages / alerts */
+  .su-messages { margin-bottom: 20px; }
+  .su-alert {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #fca5a5;
+    margin-bottom: 8px;
+  }
+  .su-alert.success {
+    background: rgba(249,115,22,0.1);
+    border-color: rgba(249,115,22,0.25);
+    color: #fdba74;
+  }
+
+  /* Fields */
+  .su-field {
+    margin-bottom: 18px;
+    animation: su-rise 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .su-field:nth-child(1) { animation-delay: 0.08s; }
+  .su-field:nth-child(2) { animation-delay: 0.13s; }
+  .su-field:nth-child(3) { animation-delay: 0.18s; }
+  .su-field:nth-child(4) { animation-delay: 0.23s; }
+  .su-field:nth-child(5) { animation-delay: 0.28s; }
+  .su-field:nth-child(6) { animation-delay: 0.33s; }
+
+  .su-label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 7px;
+  }
+
+  /* Django renders inputs — we style them by type/tag */
+  .su-field input,
+  .su-field select,
+  .su-field textarea,
+  /* Django adds id_ prefix — target anything inside su-field */
+  .su-field > p > input,
+  .su-field > p > select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .su-field input::placeholder,
+  .su-field textarea::placeholder { color: #374151; }
+
+  .su-field input:focus,
+  .su-field select:focus,
+  .su-field textarea:focus {
+    border-color: rgba(249,115,22,0.55);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.09);
+  }
+
+  /* Password toggle wrapper */
+  .su-pw-wrap {
+    position: relative;
+  }
+  .su-pw-wrap input { padding-right: 44px; }
+  .su-pw-toggle {
+    position: absolute;
+    right: 13px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    cursor: pointer; padding: 4px;
+    color: #6b7280;
+    transition: color 0.2s;
+    line-height: 0;
+  }
+  .su-pw-toggle:hover { color: #f97316; }
+
+  /* Field errors */
+  .su-field-errors {
+    margin-top: 6px;
+  }
+  .su-field-error {
+    font-size: 0.75rem;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+  }
+  .su-field-error::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    background: rgba(239,68,68,0.2);
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Submit button */
+  .su-submit {
+    width: 100%;
+    margin-top: 8px;
+    background: #f97316;
+    color: #fff;
+    font-family: 'Instrument Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    animation: su-rise 0.5s 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .su-submit:hover {
+    background: #ea6c0a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(249,115,22,0.28);
+  }
+  .su-submit:active { transform: translateY(0); }
+  .su-submit svg { transition: transform 0.2s; }
+  .su-submit:hover svg { transform: translateX(4px); }
+
+  /* Divider */
+  .su-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .su-divider::before,
+  .su-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+  .su-divider span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: #4b5563;
+    text-transform: uppercase;
+  }
+
+  /* Footer link */
+  .su-footer {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6b7280;
+    animation: su-rise 0.5s 0.48s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .su-footer a {
+    color: #f97316;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .su-footer a:hover { color: #fbbf24; }
+
+  /* Django widget override — make all form inputs match */
+  #signup-form input[type="text"],
+  #signup-form input[type="email"],
+  #signup-form input[type="password"],
+  #signup-form input[type="number"],
+  #signup-form select,
+  #signup-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    margin-top: 7px;
+  }
+  #signup-form input:focus,
+  #signup-form select:focus,
+  #signup-form textarea:focus {
+    border-color: rgba(249,115,22,0.55);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.09);
+  }
+  #signup-form input::placeholder { color: #374151; }
+  #signup-form label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    display: block;
+  }
+  #signup-form p {
+    margin-bottom: 18px;
+    animation: su-rise 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  #signup-form ul {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+  }
+  #signup-form ul li {
+    font-size: 0.75rem;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    padding: 0;
+    background: none;
+  }
+  #signup-form ul li::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    background: rgba(239,68,68,0.2);
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 560px) {
+    .su-card { padding: 36px 22px 32px; border-radius: 18px; }
+    .su-title { font-size: 1.8rem; }
+  }
+</style>
+
+<div class="su-page">
+  
+
+  <div class="su-card">
+
+    <!-- Header -->
+    <div class="su-header">
+      <div class="su-eyebrow">Good-Day Events</div>
+      <h1 class="su-title">Create Your <span>Account</span></h1>
+      <p class="su-subtitle">Join thousands who trust us to make their events extraordinary.</p>
     </div>
-    <div>
-        {% if form.non_field_errors %}
+
+    <!-- Django messages -->
+    {% if messages %}
+      <div class="su-messages">
+        {% for message in messages %}
+          <div class="su-alert {% if message.tags == 'success' %}success{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Non-field errors -->
+    {% if form.non_field_errors %}
+      <div class="su-messages">
+        {% for error in form.non_field_errors %}
+          <div class="su-alert">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form id="signup-form" action="" method="POST" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <p>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
             <ul>
-                {% for error in form.non_field_errors  %}
-                    <li class="bg-red-500 p-2 text-center">{{error}}</li>
-                {% endfor %}
+              {% for error in field.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
             </ul>
-        {% endif %}
-        <form action="" method="POST" class="">
-            {% csrf_token %}
-            {% for field in form  %}
-                <p>
-                    <label for="{{field.id_for_label}}">{{field.label}}</label>
-                    {{field}}
-                    {% if field.errors %}
-                        <ul>
-                            {% for error in field.errors  %}
-                                <li class="bg-red-500 p-2 text-center">{{error}}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </p>
-            {% endfor %}
-            <button type = "submit" class="bg-blue-600 py-1 px-2 shadow-md mx-auto text-center w-full my-3 rounded focus:bg-green-600 mb-20 text-white" >Sign Up</button>
-        </form>
+          {% endif %}
+        </p>
+      {% endfor %}
+
+      <button type="submit" class="su-submit">
+        Create Account
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </form>
+
+    <div class="su-divider"><span>already have an account?</span></div>
+
+    <div class="su-footer">
+      <a href="{% url 'sign_in' %}">Sign in instead →</a>
     </div>
+
+  </div>
 </div>
+
 {% endblock sign_up_form %}
