@@ -31,12 +31,15 @@ def is_organizer(user):
 def is_participant(user): 
     return user.groups.filter(name = 'Participant').exists()
 
-def navbar_test(user): 
+
+def navbar_test(user):
+    if not user.is_authenticated:
+        return "navbar.html"
     user_group = user.groups.first()
     group_name = 'No Group'
     if user_group:
         group_name = user_group.name
-        
+
     if group_name == "Admin":
         navbar = "admin/admin_navbar.html"
     elif group_name == "Organizer":
@@ -44,7 +47,7 @@ def navbar_test(user):
     elif group_name == 'Participant':
         navbar = "participant/participant_navbar.html"
     else:
-        navbar = "navbar.html"
+        navbar = "navbar.html"  # ← this was missing
     return navbar
     
     
@@ -313,16 +316,21 @@ def rsvp(request, event_id):
 
 """ Class Based Views """
 
-class ProfileView(LoginRequiredMixin, TemplateView): 
+
+class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/profile.html'
-    
+
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)  
-        group = self.request.user.groups.first()
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        group = user.groups.first()
         group_name = "No Group"
         if group:
             group_name = group.name
-        user = self.request.user
+
+        registered_events = Event.objects.filter(
+            participant=user)
+
         context['username'] = user.username
         context['email'] = user.email
         context['name'] = user.get_full_name()
@@ -333,9 +341,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['designation'] = group_name
         context['member_since'] = user.date_joined
         context['last_login'] = user.last_login
-        context['navbar'] = navbar_test(self.request.user)
+        context['navbar'] = navbar_test(user)
+        context['registered_events'] = registered_events.count()
+        context['registered_events_list'] = registered_events
         return context
-    
     
 class PasswordChange(LoginRequiredMixin, PasswordChangeView): 
     template_name = 'accounts/password_change.html'
