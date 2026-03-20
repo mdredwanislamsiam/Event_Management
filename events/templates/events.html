@@ -506,7 +506,7 @@
     <img src="{% static 'images/premium_photo-1661884752233-eac0b5efe655.jpg' %}" alt="Good-Day Events" />
     <div class="ev-hero-overlay"></div>
     <div class="ev-hero-accent"></div>
-    <div class="ev-hero-content">
+    <div class="ev-hero-content p-5">
       <div class="ev-hero-eyebrow">Good-Day Event Management</div>
       <h1 class="ev-hero-title">Discover <span>Events</span></h1>
       <div class="ev-hero-stats">
@@ -527,7 +527,7 @@
   </div>
 
   <!-- ══ SEARCH ══ -->
-  <div class="ev-search-wrap">
+  <div class="ev-search-wrap px-5">
     <h2 class="ev-search-heading my-10">Find Your Next <span>Experience</span></h2>
 
     <div class="ev-search-card container mx-auto">
@@ -612,7 +612,7 @@
   {% endif %}
 
   <!-- ══ RESULTS HEADER ══ -->
-  <div class="ev-results-header container mx-auto">
+  <div class="ev-results-header container mx-auto px-5">
     <div class="ev-results-count">
       Showing <strong>{{ events|length }}</strong> event{{ events|length|pluralize }}
       {% if request.GET.search %} for "<em>{{ request.GET.search }}</em>"{% endif %}
@@ -620,7 +620,7 @@
   </div>
 
   <!-- ══ EVENTS GRID ══ -->
-  <div class="ev-grid container mx-auto" id="ev-grid">
+  <div class="ev-grid container mx-auto px-5" id="ev-grid">
 
     {% for event in events %}
     <div class="ev-card">

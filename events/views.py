@@ -343,6 +343,7 @@ class UpdateEventView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         messages.success(self.request, "Event Updated Successfully")
         return redirect('update_event', id=event.id)
 
+
 class DeleteEventView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     permission_required = 'events.delete_event'
     login_url = 'no_permission'

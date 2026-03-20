@@ -490,6 +490,106 @@
     color: #6b7280;
     font-size: 0.875rem;
   }
+
+  /* ── RESPONSIVE ── */
+
+  /* Tablet: ≤ 768px */
+  @media (max-width: 768px) {
+    .page {
+      padding: 24px 16px;
+    }
+
+    .dash-title {
+      font-size: 2rem;
+    }
+
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search-wrap {
+      max-width: 100%;
+    }
+
+    .create-btn {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .groups-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .card-head {
+      padding: 16px 18px 14px;
+    }
+
+    .card-body {
+      padding: 14px 18px;
+    }
+
+    .card-foot {
+      padding: 12px 18px 16px;
+    }
+
+    .perm-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .perm-code {
+      align-self: flex-start;
+    }
+  }
+
+  /* Mobile: ≤ 480px */
+  @media (max-width: 480px) {
+    .page {
+      padding: 16px 12px;
+    }
+
+    .dash-title {
+      font-size: 1.6rem;
+    }
+
+    .stat-chip {
+      padding: 14px 16px;
+      gap: 10px;
+    }
+
+    .stat-val {
+      font-size: 1.4rem;
+    }
+
+    .card-avatar {
+      width: 36px;
+      height: 36px;
+    }
+
+    .card-name {
+      font-size: 1rem;
+    }
+
+    .badge-count {
+      font-size: 0.65rem;
+      padding: 4px 9px;
+    }
+
+    .btn {
+      font-size: 0.72rem;
+      padding: 10px 12px;
+    }
+
+    .card-foot {
+      flex-direction: column;
+    }
+  }
 </style>
 
 <div class="page">

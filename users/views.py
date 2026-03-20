@@ -290,8 +290,8 @@ def participant_dashboard(request):
     return render(request, 'participant/participant_dashboard.html', context)
 
 
-@login_required
 
+@login_required
 @user_passes_test(is_participant, login_url='no_permission')
 def rsvp(request, event_id): 
     if request.method == "POST": 
