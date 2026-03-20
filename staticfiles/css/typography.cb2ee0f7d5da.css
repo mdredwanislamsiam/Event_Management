@@ -1,0 +1,165 @@
+/*
+  Typography system for EVENT_MANAGEMENT
+
+  Fonts:
+  - Headings: Fraunces (editorial, premium display)
+  - Body/UI: Instrument Sans (clean, modern SaaS)
+  - Mono: IBM Plex Mono (IDs, timestamps, data)
+*/
+
+/* Fonts are loaded via <link> tags in the layout templates for best performance. */
+
+:root {
+  /* Font stacks */
+  --font-heading: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", Times,
+    serif;
+  --font-body: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* Font weights */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /*
+    Type scale (size + matching leading + tracking).
+    Use these tokens directly in custom CSS when Tailwind utilities aren’t used.
+  */
+  --text-xs: 0.75rem;
+  --leading-xs: 1.25;
+  --tracking-xs: 0.01em;
+
+  --text-sm: 0.875rem;
+  --leading-sm: 1.35;
+  --tracking-sm: 0.005em;
+
+  --text-base: 1rem;
+  --leading-base: 1.55;
+  --tracking-base: 0em;
+
+  --text-lg: 1.125rem;
+  --leading-lg: 1.55;
+  --tracking-lg: -0.005em;
+
+  --text-xl: 1.25rem;
+  --leading-xl: 1.45;
+  --tracking-xl: -0.01em;
+
+  --text-2xl: 1.5rem;
+  --leading-2xl: 1.25;
+  --tracking-2xl: -0.015em;
+
+  --text-3xl: 1.875rem;
+  --leading-3xl: 1.15;
+  --tracking-3xl: -0.02em;
+
+  --text-4xl: 2.25rem;
+  --leading-4xl: 1.05;
+  --tracking-4xl: -0.025em;
+
+  --text-5xl: 3rem;
+  --leading-5xl: 1.02;
+  --tracking-5xl: -0.03em;
+}
+
+html {
+  font-family: var(--font-body);
+  font-size: 16px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  letter-spacing: var(--tracking-base);
+}
+
+/* Headings: keep Tailwind sizing/weights, but give them a distinct display voice. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  letter-spacing: var(--tracking-xl);
+}
+
+p,
+li,
+dd,
+dt,
+label,
+small,
+caption {
+  font-family: var(--font-body);
+}
+
+a,
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+table,
+th,
+td {
+  font-family: inherit;
+}
+
+/* Tailwind interoperability: override the default font utility stacks if used. */
+.font-sans {
+  font-family: var(--font-body) !important;
+}
+
+.font-serif {
+  font-family: var(--font-heading) !important;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* Optional utilities for templates/custom CSS (non-Tailwind). */
+.type-heading {
+  font-family: var(--font-heading) !important;
+}
+
+.type-body {
+  font-family: var(--font-body) !important;
+}
+
+.type-mono {
+  font-family: var(--font-mono) !important;
+}
+
+.type-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  line-height: var(--leading-3xl);
+  letter-spacing: var(--tracking-3xl);
+}
+
+.type-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  line-height: var(--leading-lg);
+  letter-spacing: var(--tracking-lg);
+}
